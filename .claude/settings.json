@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(echo \"$CLAUDE_TOOL_INPUT\" | node -e \"const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.file_path||d.path||'')\"); if [[ \"$FILE\" == *.ts || \"$FILE\" == *.tsx || \"$FILE\" == *.js || \"$FILE\" == *.jsx || \"$FILE\" == *.json ]]; then cd /Users/pmihaylov/ccode/investo && npx prettier --write \"$FILE\" 2>/dev/null && npx eslint --fix \"$FILE\" 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=$(echo \"$CLAUDE_TOOL_INPUT\" | node -e \"const d=JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')); console.log(d.command||'')\"); if echo \"$CMD\" | grep -qE 'rm -rf|git push --force|git push -f|vercel --prod|vercel promote'; then echo \"BLOCKED: destructive command requires human approval: $CMD\" >&2; exit 1; fi; if echo \"$CMD\" | grep -qE '\\.env[^.]' && echo \"$CMD\" | grep -qvE 'cat .env.example|echo.*\\.env.example'; then echo \"BLOCKED: direct .env access requires human approval\" >&2; exit 1; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
