@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'mobile/**'],
     coverage: {
       reporter: ['text', 'lcov'],
       thresholds: { lines: 80, branches: 80, functions: 80, statements: 80 },
