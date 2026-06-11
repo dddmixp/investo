@@ -70,15 +70,18 @@ jobs:
 
           ISSUE_BODY=$(gh issue view $ISSUE_NUMBER --json body --jq '.body')
 
-          npx claude@latest \
-            --agent developer \
+          npx --yes @anthropic-ai/claude-code@latest \
+            --allowedTools "Read,Write,Edit,Bash,Glob,Grep" \
             --print \
-            "Issue #${ISSUE_NUMBER}: ${ISSUE_TITLE}
+            "You are the developer agent for Investo. Read CLAUDE.md and .claude/agents/developer.md before writing any code.
+
+          Issue #${ISSUE_NUMBER}: ${ISSUE_TITLE}
 
           ${ISSUE_BODY}
 
-          Implement this issue following all rules in CLAUDE.md and .claude/agents/developer.md.
-          Branch is already created: ${BRANCH}. After implementation, open a PR referencing issue #${ISSUE_NUMBER}."
+          Implement this issue exactly. Branch is already created: ${BRANCH}.
+          After implementation, run npm run lint && npm run typecheck && npm run test.
+          Then open a PR referencing issue #${ISSUE_NUMBER} with a description of what changed and how to test it."
 
       - name: Handle failure
         if: failure() && steps.find-issue.outputs.found == 'true'
