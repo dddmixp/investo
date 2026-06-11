@@ -39,9 +39,18 @@ agreements) and populates structured data — minimising manual data entry.
 
 ## Architecture Decisions
 
-_To be filled in during Phase 6 planning sprint._
+Full ADR at `docs/adr/0001-architecture.md`. Key decisions:
 
-Key contracts will be documented in `docs/adr/`.
+- **Money:** stored as integer EUR cents everywhere. Display via `formatEUR()` in `src/lib/format.ts`
+- **Auth:** Supabase Auth (email+password), single owner. `auth.uid() = owner_id` RLS on every table
+- **Storage:** Supabase Storage, private bucket `documents`. Path: `{owner_id}/{entity_type}/{entity_id}/{uuid}.{ext}`
+- **Documents:** polymorphic — single `documents` table with `entity_type` + `entity_id` columns
+- **AI extraction:** async — upload first, then POST `/api/documents/extract`, owner reviews pre-filled form
+- **Mobile comms:** WhatsApp deep-links only (`https://wa.me/{number}`), no Business API
+- **Supabase region:** EU Frankfurt (data residency for Bulgarian properties)
+- **Mobile:** Expo managed workflow, NativeWind, shared Supabase JS client
+
+Key contracts in `docs/adr/0001-architecture.md` — Interface Contract section.
 
 ---
 
