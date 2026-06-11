@@ -27,7 +27,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          direct_prompt: |
+          prompt: |
             You are the code-reviewer agent for Investo. Review this PR against CLAUDE.md conventions,
             security best practices, and correctness. Use the agent definition at
             .claude/agents/code-reviewer.md for your review checklist and output format.
