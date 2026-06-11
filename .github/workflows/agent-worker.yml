@@ -14,7 +14,7 @@ jobs:
       issues: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.2.2
 
       - name: Find oldest agent-ready issue
         id: find-issue
@@ -46,7 +46,7 @@ jobs:
           gh issue comment $ISSUE_NUMBER --body "Agent worker claimed this issue. Working on it..."
           gh issue edit $ISSUE_NUMBER --remove-label agent-ready --add-label agent-in-progress
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4.4.0
         if: steps.find-issue.outputs.found == 'true'
         with:
           node-version: 22
