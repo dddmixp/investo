@@ -1,3 +1,4 @@
+import '../global.css';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -9,7 +10,7 @@ export default function RootLayout() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" testID="auth-loading" />
       </View>
     );

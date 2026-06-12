@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 
 type Props = {
   label: string;
@@ -9,38 +9,14 @@ type Props = {
 
 export function StatsCard({ label, value, testID }: Props) {
   return (
-    <View style={styles.card} testID={testID}>
-      <Text style={styles.value} testID={testID ? `${testID}-value` : undefined}>
-        {value}
+    <View className="flex-1 bg-white rounded-xl p-4 m-1 items-center shadow-sm" testID={testID}>
+      <Text
+        className="text-2xl font-bold text-gray-900 mb-1"
+        testID={testID ? `${testID}-value` : undefined}
+      >
+        {String(value)}
       </Text>
-      <Text style={styles.label}>{label}</Text>
+      <Text className="text-xs text-gray-500 text-center">{label}</Text>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
-    margin: 4,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  value: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  label: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-});

@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  RefreshControl,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { useDashboard } from '@/hooks/useDashboard';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { formatEUR } from '@/lib/format';
@@ -23,7 +16,7 @@ export function DashboardScreen() {
 
   if (loading && !data) {
     return (
-      <View style={styles.center} testID="dashboard-loading">
+      <View className="flex-1 items-center justify-center" testID="dashboard-loading">
         <ActivityIndicator size="large" testID="loading-indicator" />
       </View>
     );
@@ -31,8 +24,8 @@ export function DashboardScreen() {
 
   if (error && !data) {
     return (
-      <View style={styles.center} testID="dashboard-error">
-        <Text style={styles.errorText}>Failed to load dashboard</Text>
+      <View className="flex-1 items-center justify-center" testID="dashboard-error">
+        <Text className="text-base text-red-600">Failed to load dashboard</Text>
       </View>
     );
   }
@@ -41,32 +34,30 @@ export function DashboardScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
+      className="flex-1 bg-gray-50"
       testID="dashboard-scroll"
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          testID="refresh-control"
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} testID="refresh-control" />
       }
     >
-      <Text style={styles.title}>Portfolio Overview</Text>
+      {error && (
+        <View className="mx-4 mt-3 p-3 bg-red-50 rounded-lg" testID="refresh-error-banner">
+          <Text className="text-sm text-red-600">Refresh failed — showing cached data</Text>
+        </View>
+      )}
 
-      <View style={styles.statsGrid} testID="stats-grid">
-        <View style={styles.statsRow}>
-          <StatsCard
-            label="Properties"
-            value={stats.totalProperties}
-            testID="stat-properties"
-          />
+      <Text className="text-xl font-bold text-gray-900 px-4 pt-5 pb-3">Portfolio Overview</Text>
+
+      <View className="px-3 mb-2" testID="stats-grid">
+        <View className="flex-row mb-1">
+          <StatsCard label="Properties" value={stats.totalProperties} testID="stat-properties" />
           <StatsCard
             label="Active Tenancies"
             value={stats.activeTenancies}
             testID="stat-tenancies"
           />
         </View>
-        <View style={styles.statsRow}>
+        <View className="flex-row mb-1">
           <StatsCard
             label="Monthly Income"
             value={formatEUR(stats.monthlyIncome)}
@@ -81,44 +72,48 @@ export function DashboardScreen() {
       </View>
 
       {alerts.length > 0 && (
-        <View style={styles.section} testID="alerts-section">
-          <Text style={styles.sectionTitle}>Alerts</Text>
+        <View className="mx-4 mb-6" testID="alerts-section">
+          <Text className="text-base font-semibold text-gray-700 mb-2">Alerts</Text>
           {alerts.map((alert) => (
             <View
               key={alert.id}
-              style={[
-                styles.alertItem,
-                alert.type === 'overdue_payment' ? styles.alertOverdue : styles.alertExpiring,
-              ]}
+              className={`flex-row items-center p-3 rounded-lg mb-1.5 ${
+                alert.type === 'overdue_payment' ? 'bg-red-50' : 'bg-amber-50'
+              }`}
               testID={`alert-${alert.id}`}
             >
-              <Text style={styles.alertIcon}>
+              <Text className="text-lg mr-2.5">
                 {alert.type === 'overdue_payment' ? '⚠' : '📅'}
               </Text>
-              <Text style={styles.alertText}>{alert.message}</Text>
+              <Text className="text-sm text-gray-700 flex-1">{alert.message}</Text>
             </View>
           ))}
         </View>
       )}
 
-      <View style={styles.section} testID="transactions-section">
-        <Text style={styles.sectionTitle}>Recent Transactions</Text>
+      <View className="mx-4 mb-6" testID="transactions-section">
+        <Text className="text-base font-semibold text-gray-700 mb-2">Recent Transactions</Text>
         {recentTransactions.length === 0 ? (
-          <Text style={styles.emptyText} testID="transactions-empty">
+          <Text className="text-sm text-gray-400 text-center py-4" testID="transactions-empty">
             No transactions yet
           </Text>
         ) : (
           recentTransactions.map((tx) => (
-            <View key={tx.id} style={styles.transactionItem} testID={`transaction-${tx.id}`}>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionCategory}>{tx.category}</Text>
-                <Text style={styles.transactionDate}>{tx.date}</Text>
+            <View
+              key={tx.id}
+              className="flex-row justify-between items-center bg-white p-3 rounded-lg mb-1.5"
+              testID={`transaction-${tx.id}`}
+            >
+              <View className="flex-1">
+                <Text className="text-sm font-medium text-gray-900 capitalize">
+                  {tx.category}
+                </Text>
+                <Text className="text-xs text-gray-500 mt-0.5">{tx.date}</Text>
               </View>
               <Text
-                style={[
-                  styles.transactionAmount,
-                  tx.type === 'income' ? styles.income : styles.expense,
-                ]}
+                className={`text-base font-semibold ${
+                  tx.type === 'income' ? 'text-emerald-600' : 'text-red-600'
+                }`}
               >
                 {tx.type === 'income' ? '+' : '-'}
                 {formatEUR(tx.amount)}
@@ -130,106 +125,3 @@ export function DashboardScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f9fafb',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-    paddingHorizontal: 16,
-    paddingTop: 20,
-    paddingBottom: 12,
-  },
-  statsGrid: {
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  section: {
-    marginHorizontal: 16,
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  alertItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 6,
-  },
-  alertOverdue: {
-    backgroundColor: '#fef2f2',
-  },
-  alertExpiring: {
-    backgroundColor: '#fffbeb',
-  },
-  alertIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  alertText: {
-    fontSize: 14,
-    color: '#374151',
-    flex: 1,
-  },
-  transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 6,
-  },
-  transactionInfo: {
-    flex: 1,
-  },
-  transactionCategory: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#111827',
-    textTransform: 'capitalize',
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 2,
-  },
-  transactionAmount: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  income: {
-    color: '#059669',
-  },
-  expense: {
-    color: '#dc2626',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#9ca3af',
-    textAlign: 'center',
-    paddingVertical: 16,
-  },
-  errorText: {
-    fontSize: 16,
-    color: '#dc2626',
-  },
-});

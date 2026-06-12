@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -20,46 +19,53 @@ export function LoginScreen() {
   const handleLogin = async () => {
     setLoading(true);
     setError(null);
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) setError(authError.message);
-    setLoading(false);
+    try {
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) setError(authError.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      className="flex-1 justify-center px-6 bg-gray-50"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       testID="login-screen"
     >
-      <Text style={styles.title}>Investo</Text>
-      <Text style={styles.subtitle}>Sign in to your portfolio</Text>
+      <Text className="text-3xl font-bold text-gray-900 text-center mb-2">Investo</Text>
+      <Text className="text-base text-gray-500 text-center mb-8">
+        Sign in to your portfolio
+      </Text>
 
       {error && (
-        <Text style={styles.error} testID="login-error">
+        <Text className="text-red-600 text-sm mb-3 text-center" testID="login-error">
           {error}
         </Text>
       )}
 
       <TextInput
-        style={styles.input}
+        className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-base mb-3"
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
+        autoComplete="email"
         keyboardType="email-address"
         testID="input-email"
       />
       <TextInput
-        style={styles.input}
+        className="bg-white border border-gray-300 rounded-lg px-4 py-3 text-base mb-3"
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        autoComplete="current-password"
         testID="input-password"
       />
 
       <TouchableOpacity
-        style={[styles.button, loading && styles.buttonDisabled]}
+        className={`rounded-lg py-3.5 items-center mt-2 ${loading ? 'bg-blue-300' : 'bg-blue-600'}`}
         onPress={handleLogin}
         disabled={loading}
         testID="login-button"
@@ -67,62 +73,9 @@ export function LoginScreen() {
         {loading ? (
           <ActivityIndicator color="#ffffff" />
         ) : (
-          <Text style={styles.buttonText}>Sign In</Text>
+          <Text className="text-white text-base font-semibold">Sign In</Text>
         )}
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#f9fafb',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 32,
-  },
-  input: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 12,
-  },
-  button: {
-    backgroundColor: '#2563eb',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    backgroundColor: '#93c5fd',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  error: {
-    color: '#dc2626',
-    fontSize: 14,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-});

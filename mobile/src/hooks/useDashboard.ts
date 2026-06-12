@@ -108,7 +108,7 @@ export function useDashboard(): UseDashboardResult {
       );
       const currentDay = today.getDate();
       const overdueAlerts: Alert[] = activeTenancyRows
-        .filter((t) => t.payment_day <= currentDay && !paidTenancyIds.has(t.id))
+        .filter((t) => t.payment_day < currentDay && !paidTenancyIds.has(t.id))
         .map((t) => ({
           id: `overdue-${t.id}`,
           type: 'overdue_payment' as const,
