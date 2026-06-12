@@ -81,7 +81,26 @@ jobs:
 
           Implement this issue exactly. Branch is already created: ${BRANCH}.
           After implementation, run npm run lint && npm run typecheck && npm run test.
-          Then open a PR referencing issue #${ISSUE_NUMBER} with a description of what changed and how to test it."
+          Then git add and git commit all changes. Then git push origin ${BRANCH}.
+          Do NOT open a PR — the workflow will do that after you finish."
+
+      - name: Open PR
+        if: steps.find-issue.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ steps.find-issue.outputs.number }}
+          ISSUE_TITLE: ${{ steps.find-issue.outputs.title }}
+        run: |
+          SLUG=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | cut -c1-40)
+          BRANCH="agent/${ISSUE_NUMBER}-${SLUG}"
+          gh pr create \
+            --repo dddmixp/investo \
+            --title "$ISSUE_TITLE" \
+            --base main \
+            --head "$BRANCH" \
+            --body "Closes #${ISSUE_NUMBER}
+
+          Implemented by agent-worker. Review the diff and Claude's code review comment before merging."
 
       - name: Handle failure
         if: failure() && steps.find-issue.outputs.found == 'true'
