@@ -17,10 +17,6 @@
       },
       "package": "com.investo.app"
     },
-    "plugins": ["expo-router"],
-    "extra": {
-      "supabaseUrl": "",
-      "supabaseAnonKey": ""
-    }
+    "plugins": ["expo-router"]
   }
 }
