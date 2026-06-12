@@ -7,30 +7,56 @@ on:
     types: [created]
 
 jobs:
-  # Runs on every PR open/push — OIDC available, posts as proper PR review
+  # Auto-review every PR — runs Claude directly and posts result as a comment
   auto-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-      issues: write
-      id-token: write
 
     steps:
       - uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
 
-      - uses: anthropics/claude-code-action@v1
+      - uses: actions/setup-node@v4.4.0
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          use_sticky_comment: true
-          prompt: |
-            You are the code-reviewer agent for Investo. Review this PR against CLAUDE.md conventions,
-            security best practices, and correctness. Use the agent definition at
-            .claude/agents/code-reviewer.md for your review checklist and output format.
-            Post your findings as a PR review comment. End with APPROVE, REQUEST CHANGES, or BLOCK.
+          node-version: 22
+
+      - name: Run Claude code review
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          npx --yes @anthropic-ai/claude-code@latest \
+            --allowedTools "Read,Glob,Grep,Bash" \
+            --print \
+            "You are the code-reviewer agent for Investo. Follow .claude/agents/code-reviewer.md exactly.
+
+          Get the diff with: git diff origin/main...HEAD
+
+          Output format — one finding per line:
+          path/to/file.ts:42: 🔴 CRITICAL: <problem>. <fix>.
+          path/to/file.ts:17: 🟠 MAJOR: <problem>. <fix>.
+          path/to/file.ts:88: 🟡 MINOR: <problem>. <fix>.
+          path/to/file.ts:5:  💬 SUGGESTION: <problem>. <fix>.
+
+          End with exactly one verdict line: APPROVE, REQUEST CHANGES, or BLOCK." \
+            > /tmp/review-output.txt 2>&1
+          cat /tmp/review-output.txt
+
+      - name: Post review as PR comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          BODY=$(cat /tmp/review-output.txt)
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" \
+            --method POST \
+            -f body="## 🤖 Claude Code Review
+
+          $BODY"
 
   # Responds to @claude mentions in comments — for Q&A on PRs/issues
   claude-respond:
@@ -67,4 +93,3 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          use_sticky_comment: false
