@@ -37,11 +37,7 @@ export function DashboardScreen() {
     );
   }
 
-  const { stats, alerts, recentTransactions } = data ?? {
-    stats: { totalProperties: 0, activeTenancies: 0, monthlyIncome: 0, occupancyRate: 0 },
-    alerts: [],
-    recentTransactions: [],
-  };
+  const { stats, alerts, recentTransactions } = data!;
 
   return (
     <ScrollView
@@ -90,7 +86,10 @@ export function DashboardScreen() {
           {alerts.map((alert) => (
             <View
               key={alert.id}
-              style={[styles.alertItem, alert.type === 'overdue_payment' ? styles.alertOverdue : styles.alertExpiring]}
+              style={[
+                styles.alertItem,
+                alert.type === 'overdue_payment' ? styles.alertOverdue : styles.alertExpiring,
+              ]}
               testID={`alert-${alert.id}`}
             >
               <Text style={styles.alertIcon}>

@@ -2,6 +2,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Alert, DashboardData, DashboardStats, Transaction } from '@/types';
 
+function rows<T>(data: T[] | null): T[] {
+  return data ?? [];
+}
+
 type ActiveTenancyRow = {
   id: string;
   property_id: string;
@@ -82,11 +86,13 @@ export function useDashboard(): UseDashboardResult {
       if (monthTxRes.error) throw new Error(monthTxRes.error.message);
 
       const totalProperties = propertiesRes.count ?? 0;
-      const activeTenancyRows = (tenanciesRes.data ?? []) as ActiveTenancyRow[];
+      const activeTenancyRows = rows<ActiveTenancyRow>(tenanciesRes.data as ActiveTenancyRow[] | null);
       const activeTenancies = activeTenancyRows.length;
       const monthlyIncome = activeTenancyRows.reduce((sum, t) => sum + t.monthly_rent, 0);
       const occupancyRate =
-        totalProperties > 0 ? Math.round((activeTenancies / totalProperties) * 100) : 0;
+        totalProperties > 0
+          ? Math.min(100, Math.round((activeTenancies / totalProperties) * 100))
+          : 0;
 
       const stats: DashboardStats = {
         totalProperties,
@@ -96,7 +102,7 @@ export function useDashboard(): UseDashboardResult {
       };
 
       const paidTenancyIds = new Set(
-        ((monthTxRes.data ?? []) as MonthTxRow[])
+        rows<MonthTxRow>(monthTxRes.data as MonthTxRow[] | null)
           .map((tx) => tx.tenancy_id)
           .filter((id): id is string => id !== null),
       );
@@ -110,7 +116,7 @@ export function useDashboard(): UseDashboardResult {
           tenancyId: t.id,
         }));
 
-      const expiringAlerts: Alert[] = ((expiringRes.data ?? []) as ExpiringTenancyRow[]).map(
+      const expiringAlerts: Alert[] = rows<ExpiringTenancyRow>(expiringRes.data as ExpiringTenancyRow[] | null).map(
         (t) => ({
           id: `expiring-${t.id}`,
           type: 'lease_expiring' as const,
@@ -119,7 +125,7 @@ export function useDashboard(): UseDashboardResult {
         }),
       );
 
-      const recentTransactions = (transactionsRes.data ?? []) as Transaction[];
+      const recentTransactions = rows<Transaction>(transactionsRes.data as Transaction[] | null);
 
       setData({
         stats,

@@ -1,4 +1,3 @@
-// Keep in sync with src/lib/format.ts (canonical location in web app)
 export function formatEUR(cents: number): string {
   return new Intl.NumberFormat('bg-BG', {
     style: 'currency',
