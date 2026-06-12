@@ -7,10 +7,9 @@ on:
     types: [created]
 
 jobs:
-  review:
-    if: |
-      github.event_name == 'pull_request' ||
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+  # Runs on every PR open/push — OIDC available, posts as proper PR review
+  auto-review:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,30 +18,53 @@ jobs:
       id-token: write
 
     steps:
-      - name: Get PR ref for issue_comment trigger
-        if: github.event_name == 'issue_comment'
-        id: pr-ref
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER=$(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.pull_request.url' | grep -o '[0-9]*$')
-          PR_REF=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.head.ref')
-          echo "ref=$PR_REF" >> $GITHUB_OUTPUT
-          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
-
       - uses: actions/checkout@v4.2.2
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'issue_comment' && steps.pr-ref.outputs.ref || github.head_ref }}
 
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          show_full_output: true
           use_sticky_comment: true
           prompt: |
             You are the code-reviewer agent for Investo. Review this PR against CLAUDE.md conventions,
             security best practices, and correctness. Use the agent definition at
             .claude/agents/code-reviewer.md for your review checklist and output format.
             Post your findings as a PR review comment. End with APPROVE, REQUEST CHANGES, or BLOCK.
+
+  # Responds to @claude mentions in comments — for Q&A on PRs/issues
+  claude-respond:
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write
+
+    steps:
+      - name: Get PR branch if comment is on a PR
+        id: pr-ref
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq '.pull_request.url // empty')
+          if [ -n "$PR_URL" ]; then
+            PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
+            PR_REF=$(gh api repos/${{ github.repository }}/pulls/$PR_NUMBER --jq '.head.ref')
+            echo "ref=$PR_REF" >> $GITHUB_OUTPUT
+          else
+            echo "ref=" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr-ref.outputs.ref || github.event.repository.default_branch }}
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          use_sticky_comment: false
