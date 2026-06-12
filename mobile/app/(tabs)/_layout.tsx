@@ -1,33 +1,35 @@
 import { Tabs } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../../lib/supabase'
+import { countTotalUnread } from '../../lib/unread'
+import type { Message } from '../../types'
 
 export default function TabLayout() {
   const [unreadCount, setUnreadCount] = useState(0)
 
+  const loadUnread = useCallback(async () => {
+    const { data } = await supabase
+      .from('messages')
+      .select('id, tenant_id, direction, read, owner_id, channel, body, created_at')
+      .eq('direction', 'inbound')
+      .eq('read', false)
+    if (data) {
+      setUnreadCount(countTotalUnread(data as Message[]))
+    }
+  }, [])
+
   useEffect(() => {
-    fetchUnreadCount()
+    loadUnread()
 
     const channel = supabase
-      .channel('unread-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-        fetchUnreadCount()
-      })
+      .channel('tab-messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, loadUnread)
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
-
-  async function fetchUnreadCount() {
-    const { count } = await supabase
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('direction', 'inbound')
-      .eq('read', false)
-    setUnreadCount(count ?? 0)
-  }
+  }, [loadUnread])
 
   return (
     <Tabs>

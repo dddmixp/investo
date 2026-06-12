@@ -1,7 +1,8 @@
 import type { Message } from '@/types'
 
 export function buildWhatsAppUrl(whatsapp: string): string {
-  const number = whatsapp.startsWith('+') ? whatsapp.slice(1) : whatsapp
+  // wa.me requires the international number without the leading +
+  const number = whatsapp.replace(/[\s\-()]/g, '').replace(/^\+/, '').replace(/^00/, '')
   return `https://wa.me/${number}`
 }
 

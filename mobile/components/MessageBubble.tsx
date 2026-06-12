@@ -1,14 +1,16 @@
 import { StyleSheet, Text, View } from 'react-native'
 import type { Message } from '../types'
 
-type Props = { message: Message }
+type Props = {
+  message: Message
+}
 
-export function MessageBubble({ message }: Props) {
+export default function MessageBubble({ message }: Props) {
   const isOutbound = message.direction === 'outbound'
   return (
-    <View style={[styles.wrapper, isOutbound ? styles.outboundWrapper : styles.inboundWrapper]}>
-      <View style={[styles.bubble, isOutbound ? styles.outboundBubble : styles.inboundBubble]}>
-        <Text style={[styles.body, isOutbound ? styles.outboundText : styles.inboundText]}>
+    <View style={[styles.wrapper, isOutbound ? styles.wrapperOut : styles.wrapperIn]}>
+      <View style={[styles.bubble, isOutbound ? styles.bubbleOut : styles.bubbleIn]}>
+        <Text style={[styles.body, isOutbound ? styles.bodyOut : styles.bodyIn]}>
           {message.body}
         </Text>
         <Text style={styles.time}>
@@ -24,13 +26,13 @@ export function MessageBubble({ message }: Props) {
 
 const styles = StyleSheet.create({
   wrapper: { marginVertical: 4 },
-  outboundWrapper: { alignItems: 'flex-end' },
-  inboundWrapper: { alignItems: 'flex-start' },
-  bubble: { maxWidth: '80%', borderRadius: 16, padding: 10 },
-  outboundBubble: { backgroundColor: '#2563eb', borderBottomRightRadius: 4 },
-  inboundBubble: { backgroundColor: '#f0f0f0', borderBottomLeftRadius: 4 },
+  wrapperOut: { alignItems: 'flex-end' },
+  wrapperIn: { alignItems: 'flex-start' },
+  bubble: { maxWidth: '75%', borderRadius: 12, padding: 10 },
+  bubbleOut: { backgroundColor: '#2563eb' },
+  bubbleIn: { backgroundColor: '#f3f4f6' },
   body: { fontSize: 15 },
-  outboundText: { color: '#fff' },
-  inboundText: { color: '#111' },
-  time: { fontSize: 11, color: '#aaa', marginTop: 2 },
+  bodyOut: { color: '#fff' },
+  bodyIn: { color: '#111827' },
+  time: { fontSize: 11, color: '#9ca3af', marginTop: 4, textAlign: 'right' },
 })

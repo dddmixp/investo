@@ -1,14 +1,10 @@
 import { Stack } from 'expo-router'
-import { StatusBar } from 'expo-status-bar'
 
 export default function RootLayout() {
   return (
-    <>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="messages/[tenantId]" options={{ title: 'Messages' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="thread/[tenantId]" options={{ headerBackTitle: 'Messages' }} />
+    </Stack>
   )
 }
