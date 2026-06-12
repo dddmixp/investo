@@ -1,17 +1,27 @@
 import '../global.css';
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { LoginScreen } from '@/screens/LoginScreen';
 
 export default function RootLayout() {
-  const { session, loading } = useAuth();
+  const { session, loading, authUnavailable } = useAuth();
 
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" testID="auth-loading" />
+      </View>
+    );
+  }
+
+  if (authUnavailable) {
+    return (
+      <View className="flex-1 items-center justify-center px-6" testID="auth-unavailable">
+        <Text className="text-base text-red-600 text-center">
+          Unable to reach authentication service. Check your connection and restart the app.
+        </Text>
       </View>
     );
   }

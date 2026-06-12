@@ -17,6 +17,10 @@ export function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
+    if (!email.trim() || !password) {
+      setError('Email and password are required');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

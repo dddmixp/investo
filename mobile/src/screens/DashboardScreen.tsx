@@ -30,7 +30,8 @@ export function DashboardScreen() {
     );
   }
 
-  const { stats, alerts, recentTransactions } = data!;
+  if (!data) return null;
+  const { stats, alerts, recentTransactions } = data;
 
   return (
     <ScrollView

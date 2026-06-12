@@ -44,9 +44,9 @@ export function useDashboard(): UseDashboardResult {
     try {
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
-      const in60Days = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split('T')[0];
+      const in60DaysDate = new Date(today);
+      in60DaysDate.setDate(today.getDate() + 60);
+      const in60Days = in60DaysDate.toISOString().split('T')[0];
       const currentMonthStart = `${todayStr.substring(0, 7)}-01`;
 
       const [propertiesRes, tenanciesRes, transactionsRes, expiringRes, monthTxRes] =
@@ -107,8 +107,12 @@ export function useDashboard(): UseDashboardResult {
           .filter((id): id is string => id !== null),
       );
       const currentDay = today.getDate();
+      const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
       const overdueAlerts: Alert[] = activeTenancyRows
-        .filter((t) => t.payment_day < currentDay && !paidTenancyIds.has(t.id))
+        .filter((t) => {
+          const effectiveDay = Math.min(t.payment_day, lastDayOfMonth);
+          return effectiveDay < currentDay && !paidTenancyIds.has(t.id);
+        })
         .map((t) => ({
           id: `overdue-${t.id}`,
           type: 'overdue_payment' as const,

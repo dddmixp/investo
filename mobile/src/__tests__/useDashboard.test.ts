@@ -138,6 +138,21 @@ describe('useDashboard — alert logic', () => {
     expect(result.current.data?.stats.monthlyIncome).toBe(140000);
   });
 
+  it('treats payment_day=31 as last day of month in short months', async () => {
+    // June 12 — June has 30 days, so payment_day=31 → effectiveDay=30 < 12 is false → no alert
+    setupMocks({
+      tenancies: [{ id: 't1', property_id: 'p1', monthly_rent: 50000, payment_day: 31, tenant_id: 'u1' }],
+      monthTx: [],
+    });
+
+    const { result } = renderHook(() => useDashboard());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // effectiveDay = min(31, 30) = 30; 30 < 12 = false → no overdue
+    const overdue = result.current.data?.alerts.filter((a) => a.type === 'overdue_payment');
+    expect(overdue).toHaveLength(0);
+  });
+
   it('sets error state when Supabase returns an error', async () => {
     mockFrom.mockImplementation(() =>
       makeChain({ error: { message: 'permission denied' } }),
