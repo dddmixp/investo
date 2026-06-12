@@ -32,7 +32,7 @@ export default function RootLayout() {
 
   return (
     <NavigationContainer>
-      {!session ? <LoginScreen /> : <TabNavigator />}
+      {!session ? <LoginScreen /> : <TabNavigator session={session} />}
     </NavigationContainer>
   );
 }

@@ -1,13 +1,31 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text } from 'react-native';
+import { TenantList } from './TenantListScreen';
+import { TenantThreadScreen } from './TenantThreadScreen';
+import type { Session } from '@supabase/supabase-js';
 
-export default function MessagesScreen() {
+type Props = { session: Session };
+
+export default function MessagesScreen({ session }: Props) {
+  const [selected, setSelected] = useState<{ id: string; name: string } | null>(null);
+
+  if (selected) {
+    return (
+      <TenantThreadScreen
+        tenantId={selected.id}
+        tenantName={selected.name}
+        session={session}
+        onBack={() => setSelected(null)}
+      />
+    );
+  }
+
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-4">
-        <Text className="text-xl font-bold text-gray-900 mb-4">Messages</Text>
-        <Text className="text-sm text-gray-500">Messages coming soon.</Text>
+    <View className="flex-1 bg-gray-50">
+      <View className="px-4 pt-4 pb-2">
+        <Text className="text-xl font-bold text-gray-900">Messages</Text>
       </View>
-    </ScrollView>
+      <TenantList onSelectTenant={(id, name) => setSelected({ id, name })} />
+    </View>
   );
 }
