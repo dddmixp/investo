@@ -17,6 +17,7 @@ export type Tenant = {
   owner_id: string;
   created_at: string;
   name: string;
+  /** GDPR PII — encrypted before storage */
   egn: string | null;
   phone: string | null;
   email: string | null;
@@ -84,4 +85,28 @@ export type Booking = {
   deposit: number | null;
   source: 'direct' | 'airbnb' | 'booking_com' | 'other' | null;
   status: 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | null;
+};
+
+export type AppDocument = {
+  id: string;
+  owner_id: string;
+  created_at: string;
+  entity_type: 'property' | 'tenancy' | 'booking' | 'transaction' | 'loan';
+  entity_id: string;
+  doc_type: 'purchase_deed' | 'rental_contract' | 'loan_agreement' | 'invoice' | 'insurance' | 'utility_bill' | 'permit' | 'other' | null;
+  filename: string;
+  storage_path: string;
+  extracted_data: Record<string, unknown> | null;
+  notes: string | null;
+};
+
+export type Message = {
+  id: string;
+  owner_id: string;
+  created_at: string;
+  tenant_id: string | null;
+  direction: 'outbound' | 'inbound' | null;
+  channel: 'inapp' | 'email' | 'whatsapp' | 'phone' | null;
+  body: string | null;
+  read: boolean;
 };
