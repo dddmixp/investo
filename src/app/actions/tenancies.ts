@@ -21,6 +21,8 @@ function parseFormData(data: TenancyFormData): ActionResult {
   if (!data.start_date) return { error: 'Start date is required' };
   if (!data.monthly_rent || isNaN(parseFloat(data.monthly_rent)))
     return { error: 'Monthly rent is required' };
+  if (data.status && !['active', 'expired', 'terminated'].includes(data.status))
+    return { error: 'Invalid status' };
   return null;
 }
 

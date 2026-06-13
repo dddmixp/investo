@@ -9,9 +9,10 @@ type Props = {
   properties: Property[];
   tenants: Tenant[];
   action: (data: TenancyFormData) => Promise<ActionResult>;
+  lockedTenantId?: string;
 };
 
-export function TenancyForm({ tenancy, properties, tenants, action }: Props) {
+export function TenancyForm({ tenancy, properties, tenants, action, lockedTenantId }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +24,7 @@ export function TenancyForm({ tenancy, properties, tenants, action }: Props) {
     const fd = new FormData(e.currentTarget);
     const result = await action({
       property_id: fd.get('property_id') as string,
-      tenant_id: fd.get('tenant_id') as string,
+      tenant_id: lockedTenantId ?? (fd.get('tenant_id') as string),
       start_date: fd.get('start_date') as string,
       end_date: fd.get('end_date') as string,
       monthly_rent: fd.get('monthly_rent') as string,
@@ -58,22 +59,24 @@ export function TenancyForm({ tenancy, properties, tenants, action }: Props) {
           ))}
         </select>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Tenant *</label>
-        <select
-          name="tenant_id"
-          defaultValue={tenancy?.tenant_id ?? ''}
-          required
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-        >
-          <option value="">Select tenant…</option>
-          {tenants.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {!lockedTenantId && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Tenant *</label>
+          <select
+            name="tenant_id"
+            defaultValue={tenancy?.tenant_id ?? ''}
+            required
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          >
+            <option value="">Select tenant…</option>
+            {tenants.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>

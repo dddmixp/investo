@@ -11,5 +11,6 @@ export function isOverdue(tenancy: Tenancy, paidTenancyIds: Set<string>): boolea
 
 export function isExpired(tenancy: Tenancy): boolean {
   if (!tenancy.end_date) return false;
-  return new Date(tenancy.end_date) < new Date();
+  const end = new Date(tenancy.end_date + 'T12:00:00');
+  return end < new Date();
 }
