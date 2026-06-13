@@ -2,20 +2,10 @@
 
 import { useState } from 'react';
 import type { Loan } from '@/types';
-import type { ActionResult } from '@/app/actions/loans';
+import type { ActionResult, LoanFormData } from '@/app/actions/loans';
 
 type LoanFormProps = {
-  action: (data: {
-    property_id: string;
-    lender: string;
-    principal: string;
-    interest_rate: string;
-    rate_type: string;
-    term_months: string;
-    start_date: string;
-    monthly_payment: string;
-    outstanding: string;
-  }) => Promise<ActionResult>;
+  action: (data: LoanFormData) => Promise<ActionResult>;
   propertyId?: string;
   loan?: Loan;
 };

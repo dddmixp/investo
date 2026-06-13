@@ -19,7 +19,7 @@ export default async function PropertyLoansPage({ params }: { params: Promise<{ 
     <div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">
-          Loans — {(property as Property & { address: string }).address}
+          Loans — {(property as Property).address}
         </h1>
         <Link
           href={`/properties/${id}/loans/new`}

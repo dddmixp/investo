@@ -9,7 +9,7 @@ export default async function EditLoanPage({
 }: {
   params: Promise<{ id: string; loanId: string }>;
 }) {
-  const { id, loanId } = await params;
+  const { loanId } = await params;
   const supabase = await createServerClient();
   const { data: loan } = await supabase.from('loans').select('*').eq('id', loanId).single();
   if (!loan) notFound();
@@ -18,7 +18,7 @@ export default async function EditLoanPage({
 
   async function handleUpdate(data: Parameters<typeof updateLoan>[1]) {
     'use server';
-    return updateLoan(id, data);
+    return updateLoan(loanId, data);
   }
 
   return (
