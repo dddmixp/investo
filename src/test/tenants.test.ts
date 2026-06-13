@@ -3,7 +3,7 @@ vi.mock('@/lib/supabase/server', () => ({ createServerClient: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 import { createServerClient } from '@/lib/supabase/server';
-import { createTenant, deleteTenant } from '@/app/actions/tenants';
+import { createTenant, updateTenant, deleteTenant } from '@/app/actions/tenants';
 
 const mockUser = { id: 'owner-1' };
 let mockDb: { from: ReturnType<typeof vi.fn>; auth: { getUser: ReturnType<typeof vi.fn> } };
@@ -21,14 +21,19 @@ function buildChain(results: Record<string, unknown> = {}) {
   chain.insert = vi.fn().mockResolvedValue({ error: results.insertError ?? null });
   Object.assign(chain, { count: results.count ?? 0 });
 
-  // eq: first call returns chain (so second eq can be called), second call returns terminal
-  let eqCallCount = 0;
+  // eq: supports multi-eq chaining; the object is also thenable so await works
+  const makeThenable = (value: unknown) =>
+    Object.assign(Object.create(null), chain, {
+      then: (resolve: (v: unknown) => void) => Promise.resolve(value).then(resolve),
+    });
+
   chain.eq = vi.fn().mockImplementation(() => {
-    eqCallCount++;
-    if (eqCallCount < 2) return chain;
-    eqCallCount = 0;
-    return terminal;
+    if (results.updateError !== undefined) {
+      return makeThenable({ error: results.updateError });
+    }
+    return makeThenable(terminal);
   });
+
   return chain;
 }
 
@@ -68,6 +73,62 @@ describe('createTenant', () => {
       notes: '',
     }).catch(() => {});
     expect(chain.insert).toHaveBeenCalledWith(expect.objectContaining({ name: 'Alice' }));
+  });
+});
+
+describe('updateTenant', () => {
+  it('returns error for empty name', async () => {
+    const result = await updateTenant('t-1', {
+      name: '  ',
+      egn: '',
+      phone: '',
+      email: '',
+      whatsapp: '',
+      notes: '',
+    });
+    expect(result?.error).toBe('Name is required');
+  });
+
+  it('returns error when not authenticated', async () => {
+    mockDb.auth.getUser.mockResolvedValue({ data: { user: null } });
+    const result = await updateTenant('t-1', {
+      name: 'Alice',
+      egn: '',
+      phone: '',
+      email: '',
+      whatsapp: '',
+      notes: '',
+    });
+    expect(result?.error).toBe('Not authenticated');
+  });
+
+  it('returns error on Supabase failure', async () => {
+    const chain = buildChain({ updateError: { message: 'Update failed' } });
+    mockDb.from.mockReturnValue(chain);
+    const result = await updateTenant('t-1', {
+      name: 'Alice',
+      egn: '',
+      phone: '',
+      email: '',
+      whatsapp: '',
+      notes: '',
+    });
+    expect(result?.error).toBe('Update failed');
+  });
+
+  it('calls update with trimmed name and correct id', async () => {
+    const chain = buildChain();
+    mockDb.from.mockReturnValue(chain);
+    await updateTenant('t-1', {
+      name: '  Bob  ',
+      egn: '',
+      phone: '',
+      email: '',
+      whatsapp: '',
+      notes: '',
+    }).catch(() => {});
+    expect(chain.update).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bob' }));
+    expect(chain.eq).toHaveBeenCalledWith('id', 't-1');
   });
 });
 

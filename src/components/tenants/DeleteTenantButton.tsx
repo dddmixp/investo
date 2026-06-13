@@ -7,7 +7,18 @@ export function DeleteTenantButton({ id }: { id: string }) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  if (error) return <span className="text-xs text-red-600">{error}</span>;
+  if (error)
+    return (
+      <span className="inline-flex items-center gap-2">
+        <span className="text-xs text-red-600">{error}</span>
+        <button
+          onClick={() => { setError(null); setConfirming(false); }}
+          className="text-xs text-gray-500 underline"
+        >
+          Dismiss
+        </button>
+      </span>
+    );
   if (!confirming)
     return (
       <button

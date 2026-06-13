@@ -14,11 +14,10 @@ export default async function EditTenantPage({
   const { data } = await supabase.from('tenants').select('*').eq('id', id).single();
   if (!data) notFound();
   const tenant = data as Tenant;
-  const action = async (fd: Parameters<typeof updateTenant>[1]) => updateTenant(id, fd);
   return (
     <div>
       <h1 className="mb-6 text-xl font-bold text-gray-900">Edit Tenant</h1>
-      <TenantForm tenant={tenant} action={action} />
+      <TenantForm tenant={tenant} action={updateTenant.bind(null, id)} />
     </div>
   );
 }

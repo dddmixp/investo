@@ -57,6 +57,7 @@ export async function updateTenant(
     .eq('id', id)
     .eq('owner_id', user.id);
   if (error) return { error: error.message };
+  revalidatePath(`/tenants/${id}`);
   revalidatePath('/tenants');
   redirect('/tenants');
 }
