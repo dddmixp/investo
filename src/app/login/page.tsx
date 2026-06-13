@@ -12,10 +12,14 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !password) {
+      setError('Email and password are required');
+      return;
+    }
     setLoading(true);
     setError(null);
     const supabase = createBrowserClient();
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     if (authError) {
       setError(authError.message);
       setLoading(false);
