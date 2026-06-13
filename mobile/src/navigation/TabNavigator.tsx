@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
 import type { Session } from '@supabase/supabase-js';
@@ -21,11 +21,23 @@ const ICONS: Record<string, string> = {
 type Props = { session: Session };
 
 export function TabNavigator({ session }: Props) {
+  // Stable render function so the Documents tab is not remounted on every
+  // TabNavigator re-render (a new inline arrow each render forces a remount).
+  const renderDocuments = useCallback(
+    () => <DocumentsScreen session={session} />,
+    [session]
+  );
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: () => (
-          <Text style={{ fontSize: 20 }}>{ICONS[route.name] ?? '•'}</Text>
+          <Text
+            style={{ fontSize: 20 }}
+            accessibilityLabel={`${route.name} tab`}
+          >
+            {ICONS[route.name] ?? '•'}
+          </Text>
         ),
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#6B7280',
@@ -34,9 +46,7 @@ export function TabNavigator({ session }: Props) {
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Properties" component={PropertiesScreen} />
-      <Tab.Screen name="Documents">
-        {() => <DocumentsScreen session={session} />}
-      </Tab.Screen>
+      <Tab.Screen name="Documents">{renderDocuments}</Tab.Screen>
       <Tab.Screen name="Messages" component={MessagesScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

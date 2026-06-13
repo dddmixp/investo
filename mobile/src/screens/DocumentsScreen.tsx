@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   Alert, ActivityIndicator, RefreshControl,
@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import uuid from 'react-native-uuid';
 import { supabase } from '../lib/supabase';
+import { validateUpload, buildStoragePath } from '../lib/uploadValidation';
 import type { Session } from '@supabase/supabase-js';
 
 const DOC_TYPES = ['other', 'rental_contract', 'loan_agreement', 'invoice', 'insurance', 'utility_bill', 'permit', 'purchase_deed'];
@@ -27,8 +28,13 @@ export default function DocumentsScreen({ session }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const fetchDocs = useCallback(async () => {
-    const { data } = await supabase.from('documents').select('id, filename, doc_type, created_at')
+    const { data, error: fetchError } = await supabase.from('documents')
+      .select('id, filename, doc_type, created_at')
       .order('created_at', { ascending: false }).limit(20);
+    if (fetchError) {
+      setError(fetchError.message);
+      return;
+    }
     setDocs((data ?? []) as Doc[]);
   }, []);
 
@@ -37,7 +43,7 @@ export default function DocumentsScreen({ session }: Props) {
     setProperties((data ?? []) as { id: string; address: string }[]);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setLoading(true);
     Promise.all([fetchDocs(), fetchProperties()]).finally(() => setLoading(false));
   }, [fetchDocs, fetchProperties]);
@@ -49,16 +55,22 @@ export default function DocumentsScreen({ session }: Props) {
   }, [fetchDocs]);
 
   async function uploadFile(uri: string, filename: string, mimeType: string) {
-    if (!selectedProperty) {
-      setError('Select a property first');
+    const validationError = validateUpload(selectedProperty, filename);
+    if (validationError) {
+      setError(validationError);
       return;
     }
     setUploading(true);
     setError(null);
     try {
-      const ext = filename.split('.').pop() ?? 'jpg';
       const fileId = String(uuid.v4());
-      const storagePath = `${session.user.id}/property/${selectedProperty}/${fileId}.${ext}`;
+      const storagePath = buildStoragePath(
+        session.user.id,
+        'property',
+        selectedProperty as string,
+        fileId,
+        filename
+      );
 
       const formData = new FormData();
       formData.append('file', { uri, name: filename, type: mimeType } as unknown as Blob);
@@ -99,6 +111,8 @@ export default function DocumentsScreen({ session }: Props) {
   }
 
   async function handleGallery() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { Alert.alert('Permission required', 'Media library permission is needed.'); return; }
     const result = await ImagePicker.launchImageLibraryAsync({ quality: 0.8, mediaTypes: ImagePicker.MediaTypeOptions.All });
     if (!result.canceled && result.assets[0]) {
       const asset = result.assets[0];
