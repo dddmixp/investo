@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { createServerClient } from '@/lib/supabase/server';
 
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+
+// NOTE: prompts request human-readable EUR; convert to cents when applying to entity records
 const EXTRACTION_PROMPTS: Record<string, string> = {
   rental_contract: `Extract from this rental contract:
 - tenant_name (string)
@@ -65,11 +70,13 @@ export async function POST(req: Request) {
 
   const contentType = fileRes.headers.get('content-type') ?? 'application/octet-stream';
   const isImage = contentType.startsWith('image/');
-  const isPdf = contentType === 'application/pdf' || doc.filename.endsWith('.pdf');
+  const isPdf = contentType === 'application/pdf' || doc.filename?.endsWith('.pdf');
+
+  if (isImage && !ALLOWED_IMAGE_TYPES.includes(contentType)) {
+    return NextResponse.json({ error: 'Unsupported image type' }, { status: 400 });
+  }
 
   const prompt = EXTRACTION_PROMPTS[doc.doc_type ?? ''] ?? GENERIC_PROMPT;
-
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   let extractedData: Record<string, unknown>;
 
@@ -91,7 +98,11 @@ export async function POST(req: Request) {
       ],
     });
     const text = message.content[0].type === 'text' ? message.content[0].text : '{}';
-    extractedData = JSON.parse(text) as Record<string, unknown>;
+    try {
+      extractedData = JSON.parse(text);
+    } catch {
+      return NextResponse.json({ error: 'Failed to parse extraction result' }, { status: 422 });
+    }
   } else if (isPdf) {
     // For PDFs, use document source type
     const buffer = await fileRes.arrayBuffer();
@@ -113,13 +124,24 @@ export async function POST(req: Request) {
       ],
     });
     const text = message.content[0].type === 'text' ? message.content[0].text : '{}';
-    extractedData = JSON.parse(text) as Record<string, unknown>;
+    try {
+      extractedData = JSON.parse(text);
+    } catch {
+      return NextResponse.json({ error: 'Failed to parse extraction result' }, { status: 422 });
+    }
   } else {
     return NextResponse.json({ error: 'Unsupported file type for extraction' }, { status: 400 });
   }
 
   // Store extracted data in DB
-  await supabase.from('documents').update({ extracted_data: extractedData }).eq('id', documentId);
+  const { error: updateError } = await supabase
+    .from('documents')
+    .update({ extracted_data: extractedData })
+    .eq('id', documentId);
+  if (updateError) {
+    console.error('Failed to persist extracted data', updateError);
+    return NextResponse.json({ error: 'Failed to save extraction result' }, { status: 500 });
+  }
 
   return NextResponse.json({ extractedData });
 }

@@ -26,7 +26,7 @@ export function ExtractedDataReview({ data, onConfirm }: Props) {
         ))}
       </div>
       <button
-        onClick={() => onConfirm(Object.fromEntries(Object.entries(fields)))}
+        onClick={() => onConfirm(fields)}
         className="bg-purple-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-purple-700"
       >
         Confirm &amp; Apply

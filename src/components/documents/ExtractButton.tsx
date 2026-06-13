@@ -10,15 +10,23 @@ export function ExtractButton({ documentId, onExtracted }: Props) {
   async function handleExtract() {
     setLoading(true);
     setError(null);
-    const res = await fetch('/api/documents/extract', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ documentId }),
-    });
-    const data = (await res.json()) as { error?: string; extractedData?: Record<string, unknown> };
-    if (data.error) setError(data.error);
-    else if (data.extractedData) onExtracted(data.extractedData);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/documents/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ documentId }),
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        extractedData?: Record<string, unknown>;
+      };
+      if (data.error) setError(data.error);
+      else if (data.extractedData) onExtracted(data.extractedData);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Extraction failed');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
