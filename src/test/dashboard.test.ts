@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { getOverdueAlerts, getExpiryAlerts } from '@/lib/dashboard';
+import {
+  getOverdueAlerts,
+  getExpiryAlerts,
+  getLoanPaymentAlerts,
+} from '@/lib/dashboard';
 
 describe('getOverdueAlerts', () => {
   const tenancies = [
@@ -114,5 +118,64 @@ describe('getExpiryAlerts', () => {
     // 30-day window → t1 (45 days away) should NOT appear
     const alerts = getExpiryAlerts(tenancies, today, 30);
     expect(alerts).toHaveLength(0);
+  });
+});
+
+describe('getLoanPaymentAlerts', () => {
+  const loans = [
+    { id: 'l1', property_id: 'p1', lender: 'Bank A', start_date: '2025-01-10', term_months: 120 },
+    { id: 'l2', property_id: 'p2', lender: 'Bank B', start_date: '2025-01-20', term_months: 120 },
+    { id: 'l3', property_id: 'p3', lender: 'Bank C', start_date: null, term_months: 120 },
+  ];
+
+  // Deterministic next-payment computer: same day-of-month next due in June 2026.
+  const fakeNext = (startDate: string): string | null => {
+    const day = startDate.split('-')[2];
+    return `2026-06-${day}`;
+  };
+
+  it('includes loans whose next payment falls inside the 7-day window', () => {
+    const today = new Date('2026-06-08');
+    const alerts = getLoanPaymentAlerts(loans, fakeNext, today);
+    // l1 due 2026-06-10 (2 days) is in window; l2 due 2026-06-20 (12 days) is not.
+    expect(alerts.map((a) => a.loan_id)).toContain('l1');
+    expect(alerts.map((a) => a.loan_id)).not.toContain('l2');
+  });
+
+  it('includes a payment due exactly today (today boundary)', () => {
+    const today = new Date('2026-06-10');
+    const alerts = getLoanPaymentAlerts(loans, fakeNext, today);
+    const l1 = alerts.find((a) => a.loan_id === 'l1');
+    expect(l1).toBeDefined();
+    expect(l1?.daysLeft).toBe(0);
+  });
+
+  it('skips loans with no start_date', () => {
+    const today = new Date('2026-06-08');
+    const alerts = getLoanPaymentAlerts(loans, fakeNext, today);
+    expect(alerts.map((a) => a.loan_id)).not.toContain('l3');
+  });
+
+  it('excludes loans whose next payment returns null (past term)', () => {
+    const today = new Date('2026-06-08');
+    const expired = [
+      { id: 'lx', property_id: 'px', lender: 'Bank X', start_date: '2020-01-09', term_months: 6 },
+    ];
+    const alerts = getLoanPaymentAlerts(expired, () => null, today);
+    expect(alerts).toHaveLength(0);
+  });
+
+  it('excludes payments before today', () => {
+    const today = new Date('2026-06-15');
+    // l1 due 2026-06-10 is in the past relative to today.
+    const alerts = getLoanPaymentAlerts(loans, fakeNext, today);
+    expect(alerts.map((a) => a.loan_id)).not.toContain('l1');
+  });
+
+  it('respects a custom windowDays', () => {
+    const today = new Date('2026-06-08');
+    // 15-day window → l2 (due 2026-06-20, 12 days away) now appears.
+    const alerts = getLoanPaymentAlerts(loans, fakeNext, today, 15);
+    expect(alerts.map((a) => a.loan_id)).toContain('l2');
   });
 });

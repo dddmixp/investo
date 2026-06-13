@@ -15,14 +15,26 @@ export function nextPaymentDate(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Build a candidate: same day-of-month as start, in the current or next month
+  // Build a candidate: same day-of-month as start, in the current or next month.
+  // Clamp the day to the last day of the target month to avoid month overflow
+  // (e.g. start day 31 in February would otherwise roll over into March).
+  const clampedDay = (year: number, month: number) =>
+    Math.min(start.getDate(), new Date(year, month + 1, 0).getDate());
+
   const candidate = new Date(
     today.getFullYear(),
     today.getMonth(),
-    start.getDate(),
+    clampedDay(today.getFullYear(), today.getMonth()),
   );
   if (candidate < today) {
-    candidate.setMonth(candidate.getMonth() + 1);
+    const nextMonth = candidate.getMonth() + 1;
+    // Reset day to 1 before shifting the month so the clamp is recomputed
+    // cleanly against the new month's length.
+    candidate.setDate(1);
+    candidate.setMonth(nextMonth);
+    candidate.setDate(
+      clampedDay(candidate.getFullYear(), candidate.getMonth()),
+    );
   }
 
   // Check if loan has already ended

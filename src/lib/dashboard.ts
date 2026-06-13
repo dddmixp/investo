@@ -22,6 +22,26 @@ export type LoanPaymentAlert = {
   daysLeft: number;
 };
 
+/**
+ * Parse a YYYY-MM-DD date string at local midnight.
+ *
+ * `new Date('2026-07-30')` is interpreted as UTC midnight, which can shift the
+ * calendar day relative to a locally-constructed `today`. Parsing the parts
+ * explicitly keeps both sides in the local timezone so day comparisons stay
+ * consistent.
+ */
+function parseLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+}
+
+/** Return a copy of `date` normalized to local midnight. */
+function startOfDay(date: Date): Date {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
 export function getOverdueAlerts(
   tenancies: Array<{
     id: string;
@@ -67,22 +87,23 @@ export function getExpiryAlerts(
   today: Date = new Date(),
   windowDays = 60,
 ): ExpiryAlert[] {
-  const windowEnd = new Date(today);
-  windowEnd.setDate(today.getDate() + windowDays);
+  const todayStart = startOfDay(today);
+  const windowEnd = new Date(todayStart);
+  windowEnd.setDate(todayStart.getDate() + windowDays);
 
   return tenancies
     .filter((t) => t.is_active && t.end_date)
     .filter((t) => {
-      const end = new Date(t.end_date!);
-      return end >= today && end <= windowEnd;
+      const end = parseLocalDate(t.end_date!);
+      return end >= todayStart && end <= windowEnd;
     })
     .map((t) => ({
       tenancy_id: t.id,
       property_id: t.property_id,
       tenant_name: t.tenant_name ?? 'Unknown',
       end_date: t.end_date!,
-      daysLeft: Math.ceil(
-        (new Date(t.end_date!).getTime() - today.getTime()) /
+      daysLeft: Math.round(
+        (parseLocalDate(t.end_date!).getTime() - todayStart.getTime()) /
           (1000 * 60 * 60 * 24),
       ),
     }));
@@ -103,24 +124,25 @@ export function getLoanPaymentAlerts(
   today: Date = new Date(),
   windowDays = 7,
 ): LoanPaymentAlert[] {
-  const windowEnd = new Date(today);
-  windowEnd.setDate(today.getDate() + windowDays);
+  const todayStart = startOfDay(today);
+  const windowEnd = new Date(todayStart);
+  windowEnd.setDate(todayStart.getDate() + windowDays);
 
   return loans
     .filter((l) => l.start_date)
     .map((l) => ({ ...l, next: nextPaymentDateFn(l.start_date!, l.term_months) }))
     .filter((l) => l.next !== null)
     .filter((l) => {
-      const d = new Date(l.next!);
-      return d >= today && d <= windowEnd;
+      const d = parseLocalDate(l.next!);
+      return d >= todayStart && d <= windowEnd;
     })
     .map((l) => ({
       loan_id: l.id,
       property_id: l.property_id,
       lender: l.lender,
       next_payment: l.next!,
-      daysLeft: Math.ceil(
-        (new Date(l.next!).getTime() - today.getTime()) /
+      daysLeft: Math.round(
+        (parseLocalDate(l.next!).getTime() - todayStart.getTime()) /
           (1000 * 60 * 60 * 24),
       ),
     }));

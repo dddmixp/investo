@@ -26,6 +26,7 @@ async function fetchDashboardData(): Promise<{
   tenancies: TenancyRow[];
   transactions: Transaction[];
   loans: Loan[];
+  hasError: boolean;
 }> {
   try {
     const { createServerClient } = await import('@/lib/supabase/server');
@@ -54,6 +55,20 @@ async function fetchDashboardData(): Promise<{
         .select('id, property_id, lender, amount, start_date, term_months'),
     ]);
 
+    // Surface any query errors instead of silently swallowing them.
+    let hasError = false;
+    for (const [label, res] of [
+      ['properties', propertiesRes],
+      ['tenancies', tenanciesRes],
+      ['transactions', transactionsRes],
+      ['loans', loansRes],
+    ] as const) {
+      if (res.error) {
+        hasError = true;
+        console.error(`Dashboard query failed (${label}):`, res.error);
+      }
+    }
+
     const properties: Property[] = (propertiesRes.data ?? []) as Property[];
 
     const tenancies: TenancyRow[] = ((tenanciesRes.data ?? []) as Array<{
@@ -77,10 +92,17 @@ async function fetchDashboardData(): Promise<{
     const transactions: Transaction[] = (transactionsRes.data ?? []) as Transaction[];
     const loans: Loan[] = (loansRes.data ?? []) as Loan[];
 
-    return { properties, tenancies, transactions, loans };
-  } catch {
-    // Supabase not yet configured — return empty data for build-time safety
-    return { properties: [], tenancies: [], transactions: [], loans: [] };
+    return { properties, tenancies, transactions, loans, hasError };
+  } catch (err) {
+    // Supabase not yet configured — return empty data for build-time safety.
+    console.error('Dashboard data fetch failed:', err);
+    return {
+      properties: [],
+      tenancies: [],
+      transactions: [],
+      loans: [],
+      hasError: true,
+    };
   }
 }
 
@@ -89,7 +111,8 @@ async function fetchDashboardData(): Promise<{
 // ---------------------------------------------------------------------------
 
 export default async function DashboardPage() {
-  const { properties, tenancies, transactions, loans } = await fetchDashboardData();
+  const { properties, tenancies, transactions, loans, hasError } =
+    await fetchDashboardData();
 
   const activeTenancies = tenancies.filter((t) => t.is_active);
   const activeTenancyCount = activeTenancies.length;
@@ -97,8 +120,9 @@ export default async function DashboardPage() {
     (sum, t) => sum + t.monthly_rent,
     0,
   );
-  const occupancyRate = Math.round(
-    (activeTenancyCount / Math.max(properties.length, 1)) * 100,
+  const occupancyRate = Math.min(
+    Math.round((activeTenancyCount / Math.max(properties.length, 1)) * 100),
+    100,
   );
 
   // For the MVP we show all active tenancies past their payment day as overdue.
@@ -107,11 +131,16 @@ export default async function DashboardPage() {
   const expiryAlerts = getExpiryAlerts(tenancies);
   const loanAlerts = getLoanPaymentAlerts(loans, nextPaymentDate);
 
-  const last10 = transactions.slice(0, 10);
-
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
       <h1 className="mb-6 text-2xl font-bold text-gray-900">Dashboard</h1>
+
+      {hasError && (
+        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Some dashboard data could not be loaded. The figures shown may be
+          incomplete.
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -132,8 +161,8 @@ export default async function DashboardPage() {
         <AlertSection title="Loan Payments Due" items={loanAlerts} type="loan" />
       )}
 
-      {/* Recent Transactions */}
-      <RecentTransactions transactions={last10} />
+      {/* Recent Transactions (already limited to 10 by the query) */}
+      <RecentTransactions transactions={transactions} />
 
       {/* Quick Actions */}
       <QuickActions />
