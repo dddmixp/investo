@@ -31,5 +31,6 @@ describe('Sidebar', () => {
     expect(sidebar.className).toContain('-translate-x-full');
     await userEvent.click(toggle);
     expect(sidebar.className).toContain('translate-x-0');
+    expect(sidebar.className).not.toContain('-translate-x-full');
   });
 });

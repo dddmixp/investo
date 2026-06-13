@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation';
 import { logout } from '@/app/actions/auth';
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: '⬛' },
-  { href: '/properties', label: 'Properties', icon: '🏠' },
-  { href: '/tenants', label: 'Tenants', icon: '👤' },
-  { href: '/finance', label: 'Finance', icon: '💶' },
-  { href: '/documents', label: 'Documents', icon: '📄' },
-  { href: '/bookings', label: 'Bookings', icon: '📅' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/properties', label: 'Properties' },
+  { href: '/tenants', label: 'Tenants' },
+  { href: '/finance', label: 'Finance' },
+  { href: '/documents', label: 'Documents' },
+  { href: '/bookings', label: 'Bookings' },
 ];
 
 export function Sidebar() {
@@ -52,7 +52,7 @@ export function Sidebar() {
         </div>
 
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
-          {NAV_ITEMS.map(({ href, label, icon }) => {
+          {NAV_ITEMS.map(({ href, label }) => {
             const active = pathname === href || pathname.startsWith(href + '/');
             return (
               <Link
@@ -66,7 +66,6 @@ export function Sidebar() {
                     : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
                 `}
               >
-                <span aria-hidden>{icon}</span>
                 {label}
               </Link>
             );
