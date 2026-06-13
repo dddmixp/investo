@@ -30,7 +30,7 @@ async function fetchDashboardData(): Promise<{
 }> {
   try {
     const { createServerClient } = await import('@/lib/supabase/server');
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
 
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -71,7 +71,7 @@ async function fetchDashboardData(): Promise<{
 
     const properties: Property[] = (propertiesRes.data ?? []) as Property[];
 
-    const tenancies: TenancyRow[] = ((tenanciesRes.data ?? []) as Array<{
+    const tenancies: TenancyRow[] = ((tenanciesRes.data ?? []) as unknown as Array<{
       id: string;
       property_id: string;
       monthly_rent: number;
@@ -89,8 +89,8 @@ async function fetchDashboardData(): Promise<{
       tenant_name: t.tenants?.name ?? null,
     }));
 
-    const transactions: Transaction[] = (transactionsRes.data ?? []) as Transaction[];
-    const loans: Loan[] = (loansRes.data ?? []) as Loan[];
+    const transactions: Transaction[] = (transactionsRes.data ?? []) as unknown as Transaction[];
+    const loans: Loan[] = (loansRes.data ?? []) as unknown as Loan[];
 
     return { properties, tenancies, transactions, loans, hasError };
   } catch (err) {
