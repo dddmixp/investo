@@ -18,8 +18,11 @@ export async function createTransaction(
 ): Promise<ActionResult> {
   if (!data.property_id) return { error: 'Property is required' };
   if (!data.type) return { error: 'Type is required' };
+  if (!['income', 'expense'].includes(data.type))
+    return { error: 'Invalid transaction type' };
   if (!data.amount || isNaN(parseFloat(data.amount)))
     return { error: 'Amount is required' };
+  if (parseFloat(data.amount) <= 0) return { error: 'Amount must be positive' };
   if (!data.date) return { error: 'Date is required' };
   const supabase = await createServerClient();
   const {

@@ -65,7 +65,10 @@ vi.mock('@/lib/supabase/server', () => ({ createServerClient: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 import { createServerClient } from '@/lib/supabase/server';
-import { createTransaction } from '@/app/actions/transactions';
+import {
+  createTransaction,
+  deleteTransaction,
+} from '@/app/actions/transactions';
 
 const mockSupabase = { auth: { getUser: vi.fn() }, from: vi.fn() };
 beforeEach(() => {
@@ -122,5 +125,54 @@ describe('createTransaction validation', () => {
     expect(chain.insert).toHaveBeenCalledWith(
       expect.objectContaining({ amount: 150050 })
     );
+  });
+  it('rejects invalid transaction type', async () => {
+    expect(
+      (
+        await createTransaction({
+          property_id: 'p1',
+          type: 'transfer',
+          category: 'rent',
+          amount: '500',
+          date: '2026-06-01',
+          description: '',
+        })
+      )?.error
+    ).toBe('Invalid transaction type');
+  });
+  it('rejects non-positive amount', async () => {
+    expect(
+      (
+        await createTransaction({
+          property_id: 'p1',
+          type: 'income',
+          category: 'rent',
+          amount: '0',
+          date: '2026-06-01',
+          description: '',
+        })
+      )?.error
+    ).toBe('Amount must be positive');
+  });
+});
+
+describe('deleteTransaction', () => {
+  it('deletes and returns null on success', async () => {
+    const chain = {
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+    };
+    // resolve when awaited after the final .eq()
+    chain.eq.mockReturnValueOnce(chain).mockResolvedValueOnce({ error: null });
+    mockSupabase.from.mockReturnValue(chain);
+    const result = await deleteTransaction('tx1');
+    expect(chain.delete).toHaveBeenCalled();
+    expect(chain.eq).toHaveBeenCalledWith('id', 'tx1');
+    expect(chain.eq).toHaveBeenCalledWith('owner_id', 'o1');
+    expect(result).toBeNull();
+  });
+  it('returns error when unauthenticated', async () => {
+    mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
+    expect((await deleteTransaction('tx1'))?.error).toBe('Not authenticated');
   });
 });

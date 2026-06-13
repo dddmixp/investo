@@ -22,17 +22,35 @@ export default async function FinancePage({
 
   let query = supabase
     .from('transactions')
-    .select('*')
+    .select('id, type, category, amount, date, description, property_id, created_at')
     .order('date', { ascending: false });
   if (filters.property) query = query.eq('property_id', filters.property);
   if (filters.type) query = query.eq('type', filters.type);
   if (filters.from) query = query.gte('date', filters.from);
   if (filters.to) query = query.lte('date', filters.to);
 
-  const [{ data: txs }, { data: properties }] = await Promise.all([
+  const [
+    { data: txs, error: txError },
+    { data: properties, error: propError },
+  ] = await Promise.all([
     query,
     supabase.from('properties').select('id, address').order('address'),
   ]);
+
+  if (txError) {
+    return (
+      <div className="text-sm text-red-600">
+        Failed to load transactions: {txError.message}
+      </div>
+    );
+  }
+  if (propError) {
+    return (
+      <div className="text-sm text-red-600">
+        Failed to load properties: {propError.message}
+      </div>
+    );
+  }
 
   const transactions = (txs ?? []) as Transaction[];
   const props = (properties ?? []) as Property[];
