@@ -27,8 +27,11 @@ async function registerForPushNotifications(userId: string) {
 
   const platform = Platform.OS === 'ios' ? 'ios' : 'android';
 
-  await supabase.from('push_tokens').upsert(
+  const { error } = await supabase.from('push_tokens').upsert(
     { owner_id: userId, token, platform },
     { onConflict: 'owner_id,token' },
   );
+  if (error) {
+    console.warn('Failed to register push token:', error.message);
+  }
 }
