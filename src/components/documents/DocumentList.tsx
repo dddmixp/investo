@@ -1,26 +1,35 @@
 'use client';
 import { useState } from 'react';
-import type { Document } from '@/types';
+import type { AppDocument } from '@/types';
 import { deleteDocument } from '@/app/actions/documents';
 
-type Props = { documents: Document[] };
+type Props = { documents: AppDocument[] };
 
 export function DocumentList({ documents }: Props) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function getSignedUrl(docId: string) {
     setLoadingId(docId);
     const res = await fetch(`/api/documents/${docId}/signed-url`);
+    if (!res.ok) {
+      setLoadingId(null);
+      throw new Error(`Failed to get URL: ${res.status}`);
+    }
     const { url } = (await res.json()) as { url: string };
     setLoadingId(null);
-    return url;
+    return url as string;
   }
 
   if (documents.length === 0) return <p className="text-sm text-gray-500">No documents yet.</p>;
 
   return (
     <>
+      {deleteError && (
+        <p className="mb-2 text-sm text-red-600">{deleteError}</p>
+      )}
       <div className="space-y-2">
         {documents.map((doc) => (
           <div
@@ -59,10 +68,21 @@ export function DocumentList({ documents }: Props) {
                 </button>
               )}
               <button
-                onClick={() => deleteDocument(doc.id, doc.storage_path)}
-                className="text-red-600 hover:text-red-800"
+                onClick={async () => {
+                  if (!window.confirm('Delete this document?')) return;
+                  setDeleting(doc.id);
+                  setDeleteError(null);
+                  const result = await deleteDocument(doc.id, doc.storage_path);
+                  if (result?.error) {
+                    setDeleteError(result.error);
+                    setDeleting(null);
+                  }
+                  // On success, page will revalidate/refresh
+                }}
+                disabled={deleting === doc.id}
+                className="text-red-600 hover:text-red-800 disabled:opacity-50"
               >
-                Delete
+                {deleting === doc.id ? '…' : 'Delete'}
               </button>
             </div>
           </div>

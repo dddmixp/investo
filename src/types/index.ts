@@ -1,4 +1,4 @@
-export type Document = {
+export type AppDocument = {
   id: string;
   owner_id: string;
   created_at: string;

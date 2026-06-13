@@ -52,13 +52,16 @@ export async function deleteDocument(id: string, storagePath: string): Promise<A
   } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
-  await supabase.storage.from('documents').remove([storagePath]);
+  // Delete DB record first (RLS enforces ownership)
   const { error } = await supabase
     .from('documents')
     .delete()
     .eq('id', id)
     .eq('owner_id', user.id);
   if (error) return { error: error.message };
+
+  // Only remove from storage after successful DB delete
+  await supabase.storage.from('documents').remove([storagePath]);
   revalidatePath('/documents');
   return null;
 }
