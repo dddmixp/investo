@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 
-export default function MessagesScreen() {
+export function MessagesScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-4">

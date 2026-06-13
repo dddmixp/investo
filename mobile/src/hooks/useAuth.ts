@@ -37,6 +37,7 @@ export function useAuth(): UseAuthResult {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {
       if (!mounted) return;
+      setAuthUnavailable(false);
       setSession(s);
     });
 

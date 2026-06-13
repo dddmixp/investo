@@ -1,10 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useDashboard } from '../hooks/useDashboard';
-
-function formatEUR(cents: number): string {
-  return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100);
-}
+import { formatEUR } from '../lib/format';
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -15,7 +12,7 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-export default function DashboardScreen() {
+export function DashboardScreen() {
   const { data, loading, error, refresh } = useDashboard();
 
   useEffect(() => { refresh(); }, [refresh]);

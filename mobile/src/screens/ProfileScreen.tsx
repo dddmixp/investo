@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 
-export default function ProfileScreen() {
+export function ProfileScreen() {
   async function handleLogout() {
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
@@ -10,7 +10,10 @@ export default function ProfileScreen() {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
-          await supabase.auth.signOut();
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            Alert.alert('Logout failed', error.message);
+          }
         },
       },
     ]);

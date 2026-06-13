@@ -28,16 +28,16 @@ vi.mock('react-native', () => ({
 }));
 
 describe('LoginScreen', () => {
-  it('module exports a default component', async () => {
+  it('module exports a named component', async () => {
     const mod = await import('../screens/LoginScreen');
-    expect(typeof mod.default).toBe('function');
+    expect(typeof mod.LoginScreen).toBe('function');
   });
 });
 
 describe('ProfileScreen logout', () => {
-  it('module exports a default component', async () => {
+  it('module exports a named component', async () => {
     const mod = await import('../screens/ProfileScreen');
-    expect(typeof mod.default).toBe('function');
+    expect(typeof mod.ProfileScreen).toBe('function');
   });
 
   it('supabase signOut is available via supabase client', async () => {

@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { useAuth } from '../src/hooks/useAuth';
-import LoginScreen from '../src/screens/LoginScreen';
-import { TabNavigator } from '../src/navigation/TabNavigator';
-import '../global.css';
+import { useAuth } from './src/hooks/useAuth';
+import { LoginScreen } from './src/screens/LoginScreen';
+import { TabNavigator } from './src/navigation/TabNavigator';
+import './global.css';
 
-export default function RootLayout() {
+export default function App() {
   const { session, loading, authUnavailable } = useAuth();
 
   if (loading) {

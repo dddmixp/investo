@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 
-export default function LoginScreen() {
+export function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

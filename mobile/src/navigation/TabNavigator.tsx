@@ -1,11 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
-import DashboardScreen from '../screens/DashboardScreen';
-import PropertiesScreen from '../screens/PropertiesScreen';
-import DocumentsScreen from '../screens/DocumentsScreen';
-import MessagesScreen from '../screens/MessagesScreen';
-import ProfileScreen from '../screens/ProfileScreen';
+import { DashboardScreen } from '../screens/DashboardScreen';
+import { PropertiesScreen } from '../screens/PropertiesScreen';
+import { DocumentsScreen } from '../screens/DocumentsScreen';
+import { MessagesScreen } from '../screens/MessagesScreen';
+import { ProfileScreen } from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 

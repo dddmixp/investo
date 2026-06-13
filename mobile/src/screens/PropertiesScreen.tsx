@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 
-export default function PropertiesScreen() {
+export function PropertiesScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-4">

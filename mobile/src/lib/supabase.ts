@@ -17,7 +17,3 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
-
-export function createMobileClient() {
-  return supabase;
-}
