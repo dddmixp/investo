@@ -5,6 +5,7 @@ import { deleteBooking } from '@/app/actions/bookings';
 export function DeleteBookingButton({ id }: { id: string }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!confirming) {
     return (
@@ -18,11 +19,21 @@ export function DeleteBookingButton({ id }: { id: string }) {
   }
 
   return (
-    <span className="inline-flex gap-2">
+    <span className="inline-flex items-center gap-2">
       <button
         onClick={async () => {
           setLoading(true);
-          await deleteBooking(id);
+          setError(null);
+          try {
+            const result = await deleteBooking(id);
+            if (result?.error) {
+              setError(result.error);
+            }
+          } catch {
+            setError('Failed to delete booking');
+          } finally {
+            setLoading(false);
+          }
         }}
         disabled={loading}
         className="text-sm font-medium text-red-600 hover:text-red-800 disabled:opacity-50"
@@ -35,6 +46,7 @@ export function DeleteBookingButton({ id }: { id: string }) {
       >
         Cancel
       </button>
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </span>
   );
 }

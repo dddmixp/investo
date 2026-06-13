@@ -26,7 +26,8 @@ export function OccupancyCalendar({ bookings }: Props) {
   const year = current.getFullYear();
   const month = current.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstWeekday = new Date(year, month, 1).getDay();
+  // Monday-first: getDay() is 0=Sun..6=Sat; shift so Monday=0..Sunday=6.
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
 
   const cells: (number | null)[] = [...Array(firstWeekday).fill(null)];
   for (let i = 1; i <= daysInMonth; i++) cells.push(i);
@@ -67,7 +68,7 @@ export function OccupancyCalendar({ bookings }: Props) {
         </button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-xs">
-        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+        {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((d) => (
           <div key={d} className="py-1 font-medium text-gray-500">
             {d}
           </div>

@@ -12,8 +12,18 @@ export default async function EditBookingPage({
   const { id } = await params;
   const supabase = await createServerClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) notFound();
+
   const [{ data: bookingData }, { data: propertiesData }] = await Promise.all([
-    supabase.from('bookings').select('*').eq('id', id).single(),
+    supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .eq('owner_id', user.id)
+      .single(),
     supabase.from('properties').select('id, address').order('address'),
   ]);
 

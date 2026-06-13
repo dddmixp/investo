@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Booking, Property } from '@/types';
 import type { BookingFormData, ActionResult } from '@/app/actions/bookings';
+import { formatEUR } from '@/lib/format';
 
 type Props = {
   booking?: Booking;
@@ -215,7 +216,7 @@ export function BookingForm({ booking, properties, action }: Props) {
 
       {total && (
         <p className="text-sm font-medium text-gray-900">
-          Total: €{total}
+          Total: {formatEUR(Math.round(parseFloat(total) * 100))}
         </p>
       )}
 

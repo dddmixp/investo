@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { calcBookingTotal, hasOverlap } from '@/lib/bookings';
 
 describe('calcBookingTotal', () => {
-  it('3 nights at 100 + cleaning 50 = 350 EUR (in cents logic)', () => {
+  it('3 nights at 100 + cleaning 50 = 350 EUR', () => {
     expect(calcBookingTotal('2026-06-01', '2026-06-04', 100, 50)).toBe(350);
   });
   it('no cleaning fee', () => {

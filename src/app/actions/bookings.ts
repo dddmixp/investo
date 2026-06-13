@@ -22,9 +22,24 @@ export type BookingFormData = {
 
 export type ActionResult = { error: string } | null;
 
-export async function createBooking(
-  data: BookingFormData,
-): Promise<ActionResult> {
+const BOOKING_STATUSES: readonly BookingStatus[] = [
+  'confirmed',
+  'checked_in',
+  'checked_out',
+  'cancelled',
+];
+const BOOKING_SOURCES: readonly NonNullable<BookingSource>[] = [
+  'direct',
+  'airbnb',
+  'booking_com',
+  'other',
+];
+
+/**
+ * Validate the fields shared by create and update. Returns an error result if
+ * any field is invalid, otherwise null.
+ */
+function validateBookingData(data: BookingFormData): ActionResult {
   if (!data.property_id) return { error: 'Property is required' };
   if (!data.guest_name.trim()) return { error: 'Guest name is required' };
   if (!data.check_in) return { error: 'Check-in date is required' };
@@ -33,6 +48,18 @@ export async function createBooking(
     return { error: 'Check-out must be after check-in' };
   if (!data.nightly_rate || parseFloat(data.nightly_rate) <= 0)
     return { error: 'Nightly rate is required' };
+  if (data.status && !BOOKING_STATUSES.includes(data.status as BookingStatus))
+    return { error: 'Invalid booking status' };
+  if (data.source && !BOOKING_SOURCES.includes(data.source as NonNullable<BookingSource>))
+    return { error: 'Invalid booking source' };
+  return null;
+}
+
+export async function createBooking(
+  data: BookingFormData,
+): Promise<ActionResult> {
+  const validationError = validateBookingData(data);
+  if (validationError) return validationError;
 
   const supabase = await createServerClient();
   const {
@@ -97,14 +124,8 @@ export async function updateBooking(
   id: string,
   data: BookingFormData,
 ): Promise<ActionResult> {
-  if (!data.property_id) return { error: 'Property is required' };
-  if (!data.guest_name.trim()) return { error: 'Guest name is required' };
-  if (!data.check_in) return { error: 'Check-in date is required' };
-  if (!data.check_out) return { error: 'Check-out date is required' };
-  if (new Date(data.check_out) <= new Date(data.check_in))
-    return { error: 'Check-out must be after check-in' };
-  if (!data.nightly_rate || parseFloat(data.nightly_rate) <= 0)
-    return { error: 'Nightly rate is required' };
+  const validationError = validateBookingData(data);
+  if (validationError) return validationError;
 
   const supabase = await createServerClient();
   const {
