@@ -1,17 +1,13 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { View, Text, FlatList, TextInput, TouchableOpacity, Linking, Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { formatWhatsAppUrl } from '../lib/messaging';
 import type { Session } from '@supabase/supabase-js';
 
 type Message = { id: string; body: string; direction: 'inbound' | 'outbound'; created_at: string };
 type Tenant = { id: string; name: string; phone: string | null; email: string | null; whatsapp: string | null };
 
 type Props = { tenantId: string; tenantName: string; session: Session; onBack: () => void };
-
-function formatWhatsAppUrl(number: string): string {
-  const digits = number.replace(/\D/g, '');
-  return `https://wa.me/${digits}`;
-}
 
 export function TenantThreadScreen({ tenantId, tenantName, session, onBack }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -37,7 +33,6 @@ export function TenantThreadScreen({ tenantId, tenantName, session, onBack }: Pr
     const body = text.trim();
     if (!body) return;
     setSending(true);
-    setText('');
     const { error } = await supabase.from('messages').insert({
       owner_id: session.user.id,
       tenant_id: tenantId,
@@ -46,8 +41,14 @@ export function TenantThreadScreen({ tenantId, tenantName, session, onBack }: Pr
       body,
       is_read: true,
     });
-    if (error) Alert.alert('Error', error.message);
-    else await fetchData();
+    if (error) {
+      // Keep the composed text so the user can retry.
+      Alert.alert('Error', error.message);
+    } else {
+      // Only clear the compose box once the message is persisted.
+      setText('');
+      await fetchData();
+    }
     setSending(false);
   }
 
@@ -62,28 +63,31 @@ export function TenantThreadScreen({ tenantId, tenantName, session, onBack }: Pr
       </View>
 
       {/* Contact actions */}
-      {tenant && (
+      {tenant && (() => {
+        const { phone, email, whatsapp } = tenant;
+        return (
         <View className="flex-row gap-2 px-4 py-2 bg-gray-50 border-b border-gray-100">
-          {tenant.phone && (
-            <TouchableOpacity onPress={() => Linking.openURL(`tel:${tenant.phone}`)}
+          {phone && (
+            <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}
               className="flex-row items-center gap-1 bg-green-50 border border-green-200 rounded-full px-3 py-1">
               <Text className="text-green-700 text-xs font-medium">Call</Text>
             </TouchableOpacity>
           )}
-          {tenant.email && (
-            <TouchableOpacity onPress={() => Linking.openURL(`mailto:${tenant.email}`)}
+          {email && (
+            <TouchableOpacity onPress={() => Linking.openURL(`mailto:${email}`)}
               className="flex-row items-center gap-1 bg-blue-50 border border-blue-200 rounded-full px-3 py-1">
               <Text className="text-blue-700 text-xs font-medium">Email</Text>
             </TouchableOpacity>
           )}
-          {tenant.whatsapp && (
-            <TouchableOpacity onPress={() => Linking.openURL(formatWhatsAppUrl(tenant.whatsapp!))}
+          {whatsapp && (
+            <TouchableOpacity onPress={() => Linking.openURL(formatWhatsAppUrl(whatsapp))}
               className="flex-row items-center gap-1 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1">
               <Text className="text-emerald-700 text-xs font-medium">WhatsApp</Text>
             </TouchableOpacity>
           )}
         </View>
-      )}
+        );
+      })()}
 
       {/* Messages */}
       <FlatList

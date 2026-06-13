@@ -1,10 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { supabase } from '../lib/supabase';
-
-type TenantWithUnread = {
-  id: string; name: string; lastMessage?: string; lastDate?: string; unreadCount: number;
-};
+import { buildTenantsWithStats, type MessageRow, type TenantWithUnread } from '../lib/messaging';
 
 type Props = { onSelectTenant: (tenantId: string, tenantName: string) => void };
 
@@ -12,24 +9,26 @@ export function TenantList({ onSelectTenant }: Props) {
   const [tenants, setTenants] = useState<TenantWithUnread[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTenants = useCallback(async () => {
-    const { data: tenantData } = await supabase.from('tenants').select('id, name').order('name');
-    if (!tenantData) { setTenants([]); return; }
+    setError(null);
+    const { data: tenantData, error: tenantError } = await supabase
+      .from('tenants').select('id, name').order('name');
+    if (tenantError) { setError(tenantError.message); return; }
+    if (!tenantData || tenantData.length === 0) { setTenants([]); return; }
 
-    const withStats = await Promise.all(tenantData.map(async (t) => {
-      const [{ data: lastMsg }, { count: unread }] = await Promise.all([
-        supabase.from('messages').select('body, created_at').eq('tenant_id', t.id).order('created_at', { ascending: false }).limit(1).single(),
-        supabase.from('messages').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id).eq('is_read', false).eq('direction', 'inbound'),
-      ]);
-      return {
-        id: t.id, name: t.name,
-        lastMessage: (lastMsg as { body?: string } | null)?.body ?? undefined,
-        lastDate: (lastMsg as { created_at?: string } | null)?.created_at?.split('T')[0] ?? undefined,
-        unreadCount: unread ?? 0,
-      };
-    }));
-    setTenants(withStats);
+    // Single batched query for all messages of these tenants, ordered ascending
+    // so per-tenant last-message + unread are derived in memory (no N+1).
+    const ids = tenantData.map((t) => t.id);
+    const { data: msgData, error: msgError } = await supabase
+      .from('messages')
+      .select('tenant_id, body, direction, is_read, created_at')
+      .in('tenant_id', ids)
+      .order('created_at', { ascending: true });
+    if (msgError) { setError(msgError.message); return; }
+
+    setTenants(buildTenantsWithStats(tenantData, (msgData ?? []) as MessageRow[]));
   }, []);
 
   useEffect(() => {
@@ -45,6 +44,12 @@ export function TenantList({ onSelectTenant }: Props) {
   if (loading) return <View className="flex-1 items-center justify-center"><ActivityIndicator /></View>;
 
   return (
+    <>
+    {error && (
+      <View className="bg-red-50 border-b border-red-200 px-4 py-2">
+        <Text className="text-red-700 text-sm">{error}</Text>
+      </View>
+    )}
     <FlatList
       data={tenants}
       keyExtractor={t => t.id}
@@ -68,5 +73,6 @@ export function TenantList({ onSelectTenant }: Props) {
         </TouchableOpacity>
       )}
     />
+    </>
   );
 }
