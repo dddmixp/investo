@@ -69,6 +69,9 @@ export type Loan = {
   outstanding: number | null;
 };
 
+export type BookingStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
+export type BookingSource = 'direct' | 'airbnb' | 'booking_com' | 'other' | null;
+
 export type Booking = {
   id: string;
   owner_id: string;
@@ -79,12 +82,13 @@ export type Booking = {
   guest_email: string | null;
   check_in: string;
   check_out: string;
-  nightly_rate: number | null;
-  total_amount: number | null;
+  nightly_rate: number;
   cleaning_fee: number | null;
   deposit: number | null;
-  source: 'direct' | 'airbnb' | 'booking_com' | 'other' | null;
-  status: 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | null;
+  source: BookingSource;
+  status: BookingStatus;
+  total_amount: number;
+  notes: string | null;
 };
 
 export type AppDocument = {
