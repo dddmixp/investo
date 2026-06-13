@@ -6,7 +6,9 @@ export type Property = {
   type: 'apartment' | 'house' | 'commercial' | 'land' | null;
   status: 'owned' | 'for_sale' | 'sold' | null;
   purchase_date: string | null;
+  /** EUR cents */
   purchase_price: number | null;
+  /** EUR cents */
   current_value: number | null;
 };
 
@@ -32,6 +34,7 @@ export type Tenancy = {
   end_date: string | null;
   monthly_rent: number;
   deposit: number | null;
+  /** @range 1-31 */
   payment_day: number;
   status: 'active' | 'expired' | 'terminated' | null;
 };
