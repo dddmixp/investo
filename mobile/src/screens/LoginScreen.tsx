@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { submitLogin } from '../lib/loginForm';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -17,19 +18,12 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleLogin() {
-    if (!email || !password) {
-      setError('Email and password are required.');
-      return;
-    }
-    setLoading(true);
     setError(null);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setLoading(true);
+    const result = await submitLogin(supabase, email, password);
     setLoading(false);
-    if (signInError) {
-      setError(signInError.message);
+    if (!result.ok) {
+      setError(result.error);
     }
   }
 

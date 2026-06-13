@@ -10,7 +10,10 @@ export default function ProfileScreen() {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
-          await supabase.auth.signOut();
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            Alert.alert('Logout failed', error.message);
+          }
         },
       },
     ]);

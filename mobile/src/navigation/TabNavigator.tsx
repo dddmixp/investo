@@ -22,7 +22,12 @@ export function TabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: () => (
-          <Text style={{ fontSize: 20 }}>{ICONS[route.name] ?? '•'}</Text>
+          <Text
+            style={{ fontSize: 20 }}
+            accessibilityLabel={`${route.name} tab`}
+          >
+            {ICONS[route.name] ?? '•'}
+          </Text>
         ),
         tabBarActiveTintColor: '#2563EB',
         tabBarInactiveTintColor: '#6B7280',
