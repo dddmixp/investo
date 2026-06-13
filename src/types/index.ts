@@ -15,6 +15,7 @@ export type Tenant = {
   owner_id: string;
   created_at: string;
   name: string;
+  /** GDPR PII — encrypted before storage */
   egn: string | null;
   phone: string | null;
   email: string | null;
@@ -88,7 +89,3 @@ export type Message = {
   body: string | null;
   read: boolean;
 };
-
-// Money utility
-export const formatEUR = (cents: number) =>
-  new Intl.NumberFormat('bg-BG', { style: 'currency', currency: 'EUR' }).format(cents / 100);

@@ -9,11 +9,13 @@ create table documents (
   filename       text not null,
   storage_path   text not null,
   extracted_data jsonb,
-  notes          text
+  notes          text,
+  unique(storage_path)
 );
 alter table documents enable row level security;
 create policy "owner access" on documents for all using (auth.uid() = owner_id);
 create index documents_entity_type_entity_id_idx on documents(entity_type, entity_id);
+create index if not exists documents_owner_id_idx on documents(owner_id);
 
 -- messages
 create table messages (
@@ -28,6 +30,8 @@ create table messages (
 );
 alter table messages enable row level security;
 create policy "owner access" on messages for all using (auth.uid() = owner_id);
+create index if not exists messages_owner_id_idx on messages(owner_id);
+create index if not exists messages_tenant_id_idx on messages(tenant_id);
 
 -- Storage bucket for documents (private)
 -- Note: bucket creation via Supabase dashboard or CLI: `supabase storage create documents --private`
