@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerClient } from '@/lib/supabase/server';
 import { formatEUR } from '@/lib/format';
+import { calcAppreciation } from '@/lib/properties';
 import type { Property, Tenancy, Transaction, Loan, Document, Booking } from '@/types';
 
 type Tab = 'overview' | 'tenancies' | 'finance' | 'bookings' | 'documents' | 'loans';
@@ -79,13 +80,10 @@ export default async function PropertyDetailPage({
   const totalExpenses = transactionRows
     .filter((t) => t.type === 'expense')
     .reduce((s, t) => s + t.amount, 0);
-  const appreciation =
-    prop.purchase_price && prop.current_value
-      ? (
-          ((prop.current_value - prop.purchase_price) / prop.purchase_price) *
-          100
-        ).toFixed(1)
-      : null;
+  const appreciation = calcAppreciation(
+    prop.purchase_price,
+    prop.current_value,
+  );
 
   return (
     <div>
@@ -250,9 +248,7 @@ export default async function PropertyDetailPage({
                 <tbody className="divide-y divide-gray-100">
                   {transactionRows.map((t) => (
                     <tr key={t.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-600">
-                        {t.created_at?.split('T')[0]}
-                      </td>
+                      <td className="px-4 py-3 text-gray-600">{t.date}</td>
                       <td className="px-4 py-3 text-gray-700">
                         {t.category ?? '—'}
                       </td>
@@ -348,7 +344,6 @@ export default async function PropertyDetailPage({
                   key={doc.id}
                   className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm"
                 >
-                  <span className="text-lg">📄</span>
                   <div>
                     <p className="font-medium text-gray-900">{doc.filename}</p>
                     <p className="text-xs text-gray-500">
