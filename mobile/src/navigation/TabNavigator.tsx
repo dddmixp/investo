@@ -21,10 +21,14 @@ const ICONS: Record<string, string> = {
 type Props = { session: Session };
 
 export function TabNavigator({ session }: Props) {
-  // Stable render function so the Documents tab is not remounted on every
-  // TabNavigator re-render (a new inline arrow each render forces a remount).
+  // Stable render functions so the session-dependent tabs are not remounted on
+  // every TabNavigator re-render (a new inline arrow each render forces a remount).
   const renderDocuments = useCallback(
     () => <DocumentsScreen session={session} />,
+    [session]
+  );
+  const renderMessages = useCallback(
+    () => <MessagesScreen session={session} />,
     [session]
   );
 
@@ -47,7 +51,7 @@ export function TabNavigator({ session }: Props) {
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Properties" component={PropertiesScreen} />
       <Tab.Screen name="Documents">{renderDocuments}</Tab.Screen>
-      <Tab.Screen name="Messages" component={MessagesScreen} />
+      <Tab.Screen name="Messages">{renderMessages}</Tab.Screen>
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
