@@ -18,7 +18,8 @@ create table bookings (
   cleaning_fee  integer,
   deposit       integer,
   source        text check (source in ('direct','airbnb','booking_com','other')),
-  status        text check (status in ('confirmed','checked_in','checked_out','cancelled'))
+  status        text check (status in ('confirmed','checked_in','checked_out','cancelled')),
+  check (check_out > check_in)
 );
 alter table bookings enable row level security;
 create policy "owner access" on bookings for all using (auth.uid() = owner_id);
@@ -31,7 +32,7 @@ create table loans (
   created_at      timestamptz default now(),
   property_id     uuid references properties not null,
   lender          text not null,
-  principal       integer not null,
+  principal       integer not null check (principal > 0),
   interest_rate   numeric(5,2),
   rate_type       text check (rate_type in ('fixed','variable')),
   term_months     integer,
@@ -41,6 +42,7 @@ create table loans (
 );
 alter table loans enable row level security;
 create policy "owner access" on loans for all using (auth.uid() = owner_id);
+create index if not exists loans_property_id_idx on loans(property_id);
 
 -- transactions (references tenancies from migration 1 and bookings from this migration)
 create table transactions (
@@ -50,7 +52,7 @@ create table transactions (
   property_id  uuid references properties not null,
   type         text check (type in ('income','expense')) not null,
   category     text,
-  amount       integer not null,
+  amount       integer not null check (amount > 0),
   date         date not null,
   description  text,
   tenancy_id   uuid references tenancies,
