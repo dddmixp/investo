@@ -14,8 +14,20 @@ export type PropertyFormData = {
 
 export type ActionResult = { error: string } | null;
 
+function parsePriceCents(raw: string): number | null | { error: string } {
+  if (!raw) return null;
+  const val = parseFloat(raw);
+  if (!Number.isFinite(val)) return { error: 'Invalid price format' };
+  return Math.round(val * 100);
+}
+
 export async function createProperty(data: PropertyFormData): Promise<ActionResult> {
   if (!data.address.trim()) return { error: 'Address is required' };
+
+  const purchasePrice = parsePriceCents(data.purchase_price);
+  if (purchasePrice !== null && typeof purchasePrice === 'object') return purchasePrice;
+  const currentValue = parsePriceCents(data.current_value);
+  if (currentValue !== null && typeof currentValue === 'object') return currentValue;
 
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -27,8 +39,8 @@ export async function createProperty(data: PropertyFormData): Promise<ActionResu
     type: data.type || null,
     status: data.status || null,
     purchase_date: data.purchase_date || null,
-    purchase_price: data.purchase_price ? Math.round(parseFloat(data.purchase_price) * 100) : null,
-    current_value: data.current_value ? Math.round(parseFloat(data.current_value) * 100) : null,
+    purchase_price: purchasePrice,
+    current_value: currentValue,
   });
 
   if (error) return { error: error.message };
@@ -39,6 +51,11 @@ export async function createProperty(data: PropertyFormData): Promise<ActionResu
 export async function updateProperty(id: string, data: PropertyFormData): Promise<ActionResult> {
   if (!data.address.trim()) return { error: 'Address is required' };
 
+  const purchasePrice = parsePriceCents(data.purchase_price);
+  if (purchasePrice !== null && typeof purchasePrice === 'object') return purchasePrice;
+  const currentValue = parsePriceCents(data.current_value);
+  if (currentValue !== null && typeof currentValue === 'object') return currentValue;
+
   const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
@@ -48,8 +65,8 @@ export async function updateProperty(id: string, data: PropertyFormData): Promis
     type: data.type || null,
     status: data.status || null,
     purchase_date: data.purchase_date || null,
-    purchase_price: data.purchase_price ? Math.round(parseFloat(data.purchase_price) * 100) : null,
-    current_value: data.current_value ? Math.round(parseFloat(data.current_value) * 100) : null,
+    purchase_price: purchasePrice,
+    current_value: currentValue,
   }).eq('id', id).eq('owner_id', user.id);
 
   if (error) return { error: error.message };

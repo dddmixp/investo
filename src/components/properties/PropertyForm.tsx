@@ -91,7 +91,7 @@ export function PropertyForm({ property, action }: Props) {
           className="bg-blue-600 text-white rounded-lg px-4 py-2 text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
           {loading ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" onClick={() => router.back()}
+        <button type="button" onClick={() => router.push('/properties')}
           className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
           Cancel
         </button>
