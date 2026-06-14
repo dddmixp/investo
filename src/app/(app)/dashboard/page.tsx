@@ -42,7 +42,7 @@ async function fetchDashboardData(): Promise<{
       supabase
         .from('tenancies')
         .select(
-          'id, property_id, monthly_rent, payment_day, end_date, is_active, tenants(name)',
+          'id, property_id, monthly_rent, payment_day, end_date, status, tenants(name)',
         ),
       supabase
         .from('transactions')
@@ -52,7 +52,7 @@ async function fetchDashboardData(): Promise<{
         .limit(10),
       supabase
         .from('loans')
-        .select('id, property_id, lender, amount, start_date, term_months'),
+        .select('id, property_id, lender, principal, start_date, term_months'),
     ]);
 
     // Surface any query errors instead of silently swallowing them.
@@ -77,7 +77,7 @@ async function fetchDashboardData(): Promise<{
       monthly_rent: number;
       payment_day: number;
       end_date: string | null;
-      is_active: boolean;
+      status: 'active' | 'expired' | 'terminated' | null;
       tenants: { name: string } | null;
     }>).map((t) => ({
       id: t.id,
@@ -85,7 +85,7 @@ async function fetchDashboardData(): Promise<{
       monthly_rent: t.monthly_rent,
       payment_day: t.payment_day,
       end_date: t.end_date,
-      is_active: t.is_active,
+      is_active: t.status === 'active',
       tenant_name: t.tenants?.name ?? null,
     }));
 
