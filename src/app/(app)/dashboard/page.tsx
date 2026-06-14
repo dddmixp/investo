@@ -46,7 +46,7 @@ async function fetchDashboardData(): Promise<{
         ),
       supabase
         .from('transactions')
-        .select('id, property_id, amount, type, category, notes, created_at')
+        .select('id, property_id, amount, type, category, description, created_at')
         .gte('created_at', firstOfMonth)
         .order('created_at', { ascending: false })
         .limit(10),
