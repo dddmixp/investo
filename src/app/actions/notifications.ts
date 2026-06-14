@@ -7,7 +7,7 @@ type TenancyRow = {
   id: string;
   property_id: string;
   payment_day: number;
-  is_active: boolean;
+  status: 'active' | 'expired' | 'terminated' | null;
   // tenants join — Supabase returns a related row (or array) for the FK.
   tenants?: { name: string | null } | { name: string | null }[] | null;
 };
@@ -25,7 +25,7 @@ export async function sendOverdueNotifications(): Promise<{ sent: number }> {
   // Fetch tenancies (joining the tenant name so alerts aren't all 'Unknown').
   const { data: tenancyRows } = await supabase
     .from('tenancies')
-    .select('id, property_id, payment_day, is_active, tenants(name)')
+    .select('id, property_id, payment_day, status, tenants(name)')
     .eq('owner_id', user.id);
 
   const tenancies = ((tenancyRows ?? []) as TenancyRow[]).map((t) => {
@@ -34,7 +34,7 @@ export async function sendOverdueNotifications(): Promise<{ sent: number }> {
       id: t.id,
       property_id: t.property_id,
       payment_day: t.payment_day,
-      is_active: t.is_active,
+      is_active: t.status === 'active',
       tenant_name: tenant?.name ?? null,
     };
   });

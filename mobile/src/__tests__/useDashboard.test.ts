@@ -64,13 +64,13 @@ beforeEach(() => {
     tenancies: {
       data: [
         // Active, paid this month (must NOT be overdue).
-        { id: 't1', property_id: 'p1', monthly_rent: 100000, payment_day: 1, end_date: null, is_active: true },
+        { id: 't1', property_id: 'p1', monthly_rent: 100000, payment_day: 1, end_date: null, status: 'active' },
         // Active, unpaid, payment_day in the past => overdue.
-        { id: 't2', property_id: 'p2', monthly_rent: 80000, payment_day: 1, end_date: null, is_active: true },
+        { id: 't2', property_id: 'p2', monthly_rent: 80000, payment_day: 1, end_date: null, status: 'active' },
         // Active, expiring within 60 days.
-        { id: 't3', property_id: 'p3', monthly_rent: 50000, payment_day: 1, end_date: '2999-01-01', is_active: true },
+        { id: 't3', property_id: 'p3', monthly_rent: 50000, payment_day: 1, end_date: '2999-01-01', status: 'active' },
         // Inactive => ignored everywhere.
-        { id: 't4', property_id: 'p4', monthly_rent: 999999, payment_day: 1, end_date: null, is_active: false },
+        { id: 't4', property_id: 'p4', monthly_rent: 999999, payment_day: 1, end_date: null, status: 'terminated' },
       ],
       error: null,
     },

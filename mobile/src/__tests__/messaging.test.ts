@@ -18,9 +18,9 @@ describe('formatWhatsAppUrl', () => {
 describe('calcUnreadCount', () => {
   it('counts unread inbound only', () => {
     const msgs = [
-      { direction: 'inbound', is_read: false },
-      { direction: 'inbound', is_read: true },
-      { direction: 'outbound', is_read: false },
+      { direction: 'inbound', read: false },
+      { direction: 'inbound', read: true },
+      { direction: 'outbound', read: false },
     ];
     expect(calcUnreadCount(msgs)).toBe(1);
   });
@@ -34,10 +34,10 @@ describe('buildTenantsWithStats', () => {
   ];
 
   const messages: MessageRow[] = [
-    { tenant_id: 't1', body: 'first', direction: 'inbound', is_read: true, created_at: '2026-01-01T10:00:00Z' },
-    { tenant_id: 't1', body: 'newest', direction: 'inbound', is_read: false, created_at: '2026-01-02T10:00:00Z' },
-    { tenant_id: 't2', body: 'hello bob', direction: 'inbound', is_read: false, created_at: '2026-01-03T09:00:00Z' },
-    { tenant_id: 't2', body: 'reply', direction: 'outbound', is_read: true, created_at: '2026-01-03T09:30:00Z' },
+    { tenant_id: 't1', body: 'first', direction: 'inbound', read: true, created_at: '2026-01-01T10:00:00Z' },
+    { tenant_id: 't1', body: 'newest', direction: 'inbound', read: false, created_at: '2026-01-02T10:00:00Z' },
+    { tenant_id: 't2', body: 'hello bob', direction: 'inbound', read: false, created_at: '2026-01-03T09:00:00Z' },
+    { tenant_id: 't2', body: 'reply', direction: 'outbound', read: true, created_at: '2026-01-03T09:30:00Z' },
   ];
 
   it('derives last message (latest by order) per tenant', () => {

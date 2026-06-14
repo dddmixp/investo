@@ -23,7 +23,7 @@ export function TenantList({ onSelectTenant }: Props) {
     const ids = tenantData.map((t) => t.id);
     const { data: msgData, error: msgError } = await supabase
       .from('messages')
-      .select('tenant_id, body, direction, is_read, created_at')
+      .select('tenant_id, body, direction, read, created_at')
       .in('tenant_id', ids)
       .order('created_at', { ascending: true });
     if (msgError) { setError(msgError.message); return; }

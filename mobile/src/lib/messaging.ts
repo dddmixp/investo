@@ -4,7 +4,7 @@ export type MessageRow = {
   tenant_id: string;
   body: string;
   direction: 'inbound' | 'outbound';
-  is_read: boolean;
+  read: boolean;
   created_at: string;
 };
 
@@ -23,8 +23,8 @@ export function formatWhatsAppUrl(number: string): string {
 }
 
 /** Count unread inbound messages in a flat list. */
-export function calcUnreadCount(messages: { direction: string; is_read: boolean }[]): number {
-  return messages.filter((m) => m.direction === 'inbound' && !m.is_read).length;
+export function calcUnreadCount(messages: { direction: string; read: boolean }[]): number {
+  return messages.filter((m) => m.direction === 'inbound' && !m.read).length;
 }
 
 /**
@@ -43,7 +43,7 @@ export function buildTenantsWithStats(
   for (const m of messages) {
     // messages ordered ascending → later entries overwrite, leaving the latest.
     lastByTenant.set(m.tenant_id, m);
-    if (m.direction === 'inbound' && !m.is_read) {
+    if (m.direction === 'inbound' && !m.read) {
       unreadByTenant.set(m.tenant_id, (unreadByTenant.get(m.tenant_id) ?? 0) + 1);
     }
   }

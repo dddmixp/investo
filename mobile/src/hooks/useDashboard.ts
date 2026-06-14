@@ -19,7 +19,7 @@ type TenancyRow = {
   monthly_rent: number;
   payment_day: number;
   end_date: string | null;
-  is_active: boolean;
+  status: 'active' | 'expired' | 'terminated' | null;
 };
 
 type TransactionRow = {
@@ -73,7 +73,7 @@ export function useDashboard() {
         supabase.from('properties').select('id').eq('owner_id', user.id),
         supabase
           .from('tenancies')
-          .select('id, property_id, monthly_rent, payment_day, end_date, is_active')
+          .select('id, property_id, monthly_rent, payment_day, end_date, status')
           .eq('owner_id', user.id),
         supabase
           .from('transactions')
@@ -97,7 +97,7 @@ export function useDashboard() {
 
       const properties = rows<PropertyRow>(propertiesRes.data);
       const tenancies = rows<TenancyRow>(tenanciesRes.data);
-      const activeTenancies = tenancies.filter((t) => t.is_active);
+      const activeTenancies = tenancies.filter((t) => t.status === 'active');
 
       const paidTenancyIds = new Set<string>(
         rows<{ tenancy_id: string | null }>(rentTxRes.data)

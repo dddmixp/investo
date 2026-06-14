@@ -24,7 +24,7 @@ export function TenantThreadScreen({ tenantId, tenantName, session, onBack }: Pr
     setMessages((msgs ?? []) as Message[]);
     setTenant(t as Tenant | null);
     // Mark inbound as read
-    await supabase.from('messages').update({ is_read: true }).eq('tenant_id', tenantId).eq('direction', 'inbound').eq('is_read', false);
+    await supabase.from('messages').update({ read: true }).eq('tenant_id', tenantId).eq('direction', 'inbound').eq('read', false);
   }, [tenantId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -39,7 +39,7 @@ export function TenantThreadScreen({ tenantId, tenantName, session, onBack }: Pr
       direction: 'outbound',
       channel: 'inapp',
       body,
-      is_read: true,
+      read: true,
     });
     if (error) {
       // Keep the composed text so the user can retry.
